@@ -264,12 +264,15 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
 
         overlay_pot = 2.1844E21  # Run 4
         # dirt_pot = 1.67392E21 # david's file
-        beamon_pot = 5.014E20 # Normalizing to 1E20 POT for comparison
+        beamon_pot = 5.013E20 # Normalizing to 1E20 POT for comparison
+        nue_intrinsic_pot = 3.93021E22
 
-        beamon_ntrig =  10349610.0 # Triggers of Run 3 data
+        beamon_ntrig =  10349610.0 # Triggers of Run 3 data (from Patrick) (think this is an average)
         beamoff_ntrig = 15764736.750000  # Triggers of Run 4 beam off 
+        # beamoff_ntrig = 17061650.550000 # Run 4 beam off triggers (non-WC processed)
 
-        nue_intrinsic_pot = 3.93021E22  # Run 4
+        df_before = df.query('run<16880').copy()
+        df_after = df.query('run>=16880').copy()
 
         df_new = df.copy()
         
@@ -284,6 +287,12 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
 
         elif df_type == "ext": 
             df_new['pot_scale'] = (beamon_ntrig/beamoff_ntrig)*ext_tune
+
+        # elif df_type == "ext": 
+        #     df_before['pot_scale'] = (8526417.0/beamoff_ntrig)*ext_tune
+        #     df_after['pot_scale'] = (1846526.0/beamoff_ntrig)*ext_tune
+
+        #     df_new = pd.concat([df_before, df_after], ignore_index=True, sort=True) 
     
     
     else: 

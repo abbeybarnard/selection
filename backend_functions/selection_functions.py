@@ -847,13 +847,17 @@ def plot_data(var, nbins, xlow, xhigh, cuts, datasets, isrun3, bdt_scale=None, s
     # ratio plot  
     ax2.errorbar(bincenters, n_data/n[-1], yerr=get_ratio_err(n_data, n[-1]), xerr=x_err, color="black", fmt='o')
     ax2.set_xlim(xlow, xhigh)
-    ax2.set_ylim(-.3, 2.3)
-    #ax2.set_ylim(-.4, 2.4)
-    #ax2.set_ylim(-0.8, 2.8)
+    # ax2.set_ylim(-.3, 2.3) # Best for main BDT 
+    # ax2.set_ylim(-.4, 2.4)
+    ax2.set_ylim(-0.8, 2.8)
     # ax2.set_ylim(-1.0, 3.0)
     # ax2.set_ylim(-0.5, 2.5) # Best for visible energy and opening angle! 
-    #ax2.set_ylim(-2.0, 4)
+    # ax2.set_ylim(-2.0, 4)
+    # ax2.set_ylim(-1.8, 3.8) # Best for dE/dx
     # ax2.set_ylim(0.5, 1.5)
+    # ax2.set_ylim(0.7, 1.3)
+    # ax2.set_ylim(0.2, 1.8)
+    # ax2.set_ylim(0, 2) 
     
     # horizontal line at 1 
     ax2.axhline(1.0, color='black', lw=1, linestyle='--')
@@ -889,8 +893,9 @@ def plot_data(var, nbins, xlow, xhigh, cuts, datasets, isrun3, bdt_scale=None, s
             labels=leg[::-1] + [err_label] + ['NuMI Data: '+str(int(sum(n_data)))], 
             prop={"size": 10}, 
             ncol=ncol, 
-            frameon=False) 
-            #loc='upper right', bbox_to_anchor=(.955, 0.99)) # This is for the plots where it's right-heavy
+            frameon=False,
+            # loc='upper right') 
+            loc='upper right', bbox_to_anchor=(.955, 0.99)) # This is for the plots where it's right-heavy
 
         
     else:
@@ -920,8 +925,8 @@ def plot_data(var, nbins, xlow, xhigh, cuts, datasets, isrun3, bdt_scale=None, s
                  #fontsize=13.5, horizontalalignment='left')
     if text: 
         #ax1.text(0.023, 0.75, text, fontsize=13.5, transform=ax1.transAxes, horizontalalignment='left')
-        ax1.text(0.023, 0.77, text, fontsize=13.5, transform=ax1.transAxes, horizontalalignment='left') # ORIGINAL
-        # ax1.text(0.020, 0.79, text, fontsize=12, transform=ax1.transAxes, horizontalalignment='left') # FOR TRACK PID
+        # ax1.text(0.023, 0.77, text, fontsize=13.5, transform=ax1.transAxes, horizontalalignment='left') # ORIGINAL
+        ax1.text(0.020, 0.79, text, fontsize=12, transform=ax1.transAxes, horizontalalignment='left') # FOR TRACK PID
         #ax1.text(0.023, 0.4, text, fontsize=12, transform=ax1.transAxes, horizontalalignment='left') # NO DATA
 
     
@@ -1721,8 +1726,9 @@ def bdt_box_plot(results_bdt, xvals, isrun3, second_results_bdt=None, results_bo
 
     
     plt.show()  
-######################################################################## 
+########################################################################   
 
+########################################################################
 def plot_mc_no_ext(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overlay', save=False, save_label=None, log=False, x_label=None, xmax=None, y_label=None, ymax=None, bdt_scale=None, text=None, xtext=None, ytext=None, osc=None, plot_bkgd=False, sys=None, x_ticks=None, is_flugg_reweight=False, bin_norm=1.0):
     """
     Modified version of plot_mc that excludes EXT (beam-off data) from the plots.
@@ -1783,24 +1789,25 @@ def plot_mc_no_ext(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overla
     counts = {}
     for category in categories.keys():
         if len(categories[category]) > 0:
-            counts[category] = round(np.nansum(mc_weights[category]))
+            counts[category] = np.nansum(mc_weights[category])
         else:
-            counts[category] = 0
+            counts[category] = 0.0
      
-    # legend - NO EXT
+     # legend - NO EXT (signal displayed to one decimal place)
     leg = {
-        'outfv' : labels['outfv'][0]+': '+str(counts['outfv']), 
-        'numu_NC_Npi0' : labels['numu_NC_Npi0'][0]+': '+str(counts['numu_NC_Npi0']), 
-        'numu_CC_Npi0' : labels['numu_CC_Npi0'][0]+': '+str(counts['numu_CC_Npi0']), 
-        'numu_NC_0pi0' : labels['numu_NC_0pi0'][0]+': '+str(counts['numu_NC_0pi0']), 
-        'numu_CC_0pi0' : labels['numu_CC_0pi0'][0]+': '+str(counts['numu_CC_0pi0']), 
-        'nue_NC' : labels['nue_NC'][0]+': '+str(counts['nue_NC']), 
-        'nue_CCother' : labels['nue_CCother'][0]+': '+str(counts['nue_CCother']),
-        "numu_Npi0" : labels['numu_Npi0'][0]+': '+str(counts['numu_Npi0']), 
-        "numu_0pi0" : labels['numu_0pi0'][0]+': '+str(counts['numu_0pi0']), 
-        "nue_other" : labels['nue_other'][0]+': '+str(counts['nue_other']), 
-        'nuebar_1eNp' : labels['nuebar_1eNp'][0]+': '+str(counts['nuebar_1eNp']), 
-        'signal' : labels['signal'][0]+': '+str(counts['signal'])
+        'outfv' : labels['outfv'][0]+': '+format(counts['outfv'], '.1f'),
+        'numu_NC_Npi0' : labels['numu_NC_Npi0'][0]+': '+format(counts['numu_NC_Npi0'], '.1f'),
+        'numu_CC_Npi0' : labels['numu_CC_Npi0'][0]+': '+format(counts['numu_CC_Npi0'], '.1f'),
+        'numu_NC_0pi0' : labels['numu_NC_0pi0'][0]+': '+format(counts['numu_NC_0pi0'], '.1f'),
+        'numu_CC_0pi0' : labels['numu_CC_0pi0'][0]+': '+format(counts['numu_CC_0pi0'], '.1f'),
+        'nue_NC' : labels['nue_NC'][0]+': '+format(counts['nue_NC'], '.1f'),
+        'nue_CCother' : labels['nue_CCother'][0]+': '+format(counts['nue_CCother'], '.1f'),
+        "numu_Npi0" : labels['numu_Npi0'][0]+': '+format(counts['numu_Npi0'], '.1f'),
+        "numu_0pi0" : labels['numu_0pi0'][0]+': '+format(counts['numu_0pi0'], '.1f'),
+        "nue_other" : labels['nue_other'][0]+': '+format(counts['nue_other'], '.1f'),
+        'nuebar_1eNp' : labels['nuebar_1eNp'][0]+': '+format(counts['nuebar_1eNp'], '.1f'),
+        # format signal to one decimal place
+        'signal' : labels['signal'][0]+': '+format(counts['signal'], '.1f')
     }
         
     
@@ -1911,7 +1918,7 @@ def plot_mc_no_ext(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overla
     
     bincenters = 0.5*(b[1:]+b[:-1])
     plt.errorbar(bincenters, n[-1], yerr=sim_err, fmt='none', color='black', linewidth=1)
-    
+
     # simulation outline 
     tot = list([0, n[-1][0]])+list(n[-1])+[0]
     b_step = list([b[0]])+list(b)+list([b[-1]])
@@ -1931,7 +1938,22 @@ def plot_mc_no_ext(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overla
     ############################################################################## 
    
     # plot format stuff
-    plt.legend(loc='upper right', prop={"size":10}, ncol=2, frameon=False)
+    # flip legend order to match plot_data style
+    label_order_main = [
+        leg['outfv'], 
+        leg['numu_NC_Npi0'], 
+        leg['numu_CC_Npi0'], 
+        leg['numu_NC_0pi0'], 
+        leg['numu_CC_0pi0'], 
+        leg['nue_NC'], 
+        leg['nue_CCother'], 
+        leg['nuebar_1eNp'], 
+        leg['signal']
+    ]
+    plt.legend(handles=p[::-1], labels=label_order_main[::-1], loc='upper right', prop={"size":10}, ncol=2, frameon=False)
+    
+    # Add top-left label
+    plt.text(0.03, 0.95, "MicroBooNE Run 4b RHC", transform=plt.gca().transAxes, fontsize=14, verticalalignment='top')
         
     if y_label: 
         plt.ylabel(y_label, fontsize=15, labelpad=8)
@@ -2000,64 +2022,106 @@ def plot_mc_no_ext(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overla
                        leg['numu_CC_0pi0'], 
                        leg['nue_NC'], 
                        leg['nue_CCother'], 
-                       leg['nuebar_1eNp']],
+                       leg['nuebar_1eNp']], 
                 weights=[mc_weights['outfv'], 
-                       mc_weights['numu_NC_Npi0'], 
-                       mc_weights['numu_CC_Npi0'], 
-                       mc_weights['numu_NC_0pi0'], 
-                       mc_weights['numu_CC_0pi0'], 
-                       mc_weights['nue_NC'], 
-                       mc_weights['nue_CCother'], 
-                       mc_weights['nuebar_1eNp']
-                      ])
+                         mc_weights['numu_NC_Npi0'], 
+                         mc_weights['numu_CC_Npi0'], 
+                         mc_weights['numu_NC_0pi0'], 
+                         mc_weights['numu_CC_0pi0'], 
+                         mc_weights['nue_NC'], 
+                         mc_weights['nue_CCother'], 
+                         mc_weights['nuebar_1eNp']])
     
-    if plot_bkgd: 
-
-        plt.legend(loc='best', prop={"size":10}, ncol=3, frameon=False)
-
-        mc_bkgd_percent_err = mc_bkgd_err/n2[-1]
-        sim_bkgd_err = [x*y for x, y in zip(n2[-1], mc_bkgd_percent_err)]
-
-        tot2 = list([0, n2[-1][0]])+list(n2[-1])+[0]
-        b_step2 = list([b2[0]])+list(b2)+list([b2[-1]])
-        plt.step(b_step2, tot2, color='black', linewidth=.7)
+    ############### Error calculation (background only) #######################
+    
+    mc_percent_err_bkgd = mc_bkgd_err/n2[-1]
+    
+    sim_err_bkgd = [x*y for x, y in zip(n2[-1], mc_percent_err_bkgd)]
         
-        # ERRORS
-        plt.errorbar(bincenters, n2[-1], yerr=sim_bkgd_err, fmt='none', color='black', linewidth=1)
+    # uncertainty band 
+    low_err_bkgd = [ x-y for x,y in zip(n2[-1], sim_err_bkgd) ]
+    low_err_bkgd.insert(0, low_err_bkgd[0])
+
+    high_err_bkgd = [ x+y for x,y in zip(n2[-1], sim_err_bkgd)]
+    high_err_bkgd.insert(0, high_err_bkgd[0])
     
-        # FORMATTING STUFF
+    plt.fill_between(nbins, low_err_bkgd, high_err_bkgd, step="pre", facecolor=(.25, .25, .25, 0), 
+                     edgecolor='darkgray', 
+                     hatch='.....', 
+                     linewidth=0.0, zorder=2, 
+                     label='MC Stat.\nUncertainty')
     
-        if x_label:
-            plt.xlabel(x_label, fontsize=15, labelpad=8)
-        else: 
-            plt.xlabel(var, fontsize=15, labelpad=8)
+    bincenters2 = 0.5*(b2[1:]+b2[:-1])
+    plt.errorbar(bincenters2, n2[-1], yerr=sim_err_bkgd, fmt='none', color='black', linewidth=1)
+
+    # simulation outline 
+    tot2 = list([0, n2[-1][0]])+list(n2[-1])+[0]
+    b2_step = list([b2[0]])+list(b2)+list([b2[-1]])
+    plt.step(b2_step, tot2, color='black', linewidth=1)
     
-        plt.xlim(xlow, xhigh)
+    # plot format stuff
+    # flip legend order here as well
+    label_order_bkgd = [
+        leg['outfv'], 
+        leg['numu_NC_Npi0'], 
+        leg['numu_CC_Npi0'], 
+        leg['numu_NC_0pi0'], 
+        leg['numu_CC_0pi0'], 
+        leg['nue_NC'], 
+        leg['nue_CCother'], 
+        leg['nuebar_1eNp']
+    ]
+    plt.legend(handles=p2[::-1], labels=label_order_bkgd[::-1], loc='upper right', prop={"size":10}, ncol=2, frameon=False)
     
-        plt.xticks(fontsize=14)
-        plt.yticks(fontsize=14)
+    # Add top-left label to background-only plot
+    plt.text(0.03, 0.95, "MicroBooNE Run 4b RHC", transform=plt.gca().transAxes, fontsize=14, verticalalignment='top')
         
-        if ymax: 
-            if log: 
-                plt.ylim(1, ymax)
-            else: 
-                plt.ylim(0, ymax)
+    if y_label: 
+        plt.ylabel(y_label, fontsize=15, labelpad=8)
     
-        plt.title('Background Distribution (MC only, no EXT)', fontsize=15) 
-        plt.show()
-        
+    if x_label:
+        plt.xlabel(x_label, fontsize=15, labelpad=8)
     else: 
+        plt.xlabel(var, fontsize=15, labelpad=8)
+    
+    if x_ticks: 
+        plt.xticks(x_ticks, fontsize=14)
+    else: 
+        plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    
+    if log: 
+        plt.yscale('log')
+        
+    if ymax: 
+        if log: 
+            plt.ylim(1, ymax)
+        else: 
+            plt.ylim(0, ymax)
+            
+    if xmax: 
+        plt.xlim(xlow, xmax)
+    else: 
+        plt.xlim(xlow, xhigh)
+            
+    if text: 
+        plt.text(xtext, ytext, text, fontsize='xx-large', horizontalalignment='right')
+    
+    if save: 
+        plt.savefig(plots_path+var+"_"+save_label+"_bkgd_only_no_ext.svg", transparent=False, bbox_inches='tight') 
+        print('saving to: '+plots_path)
+        
+    if plot_bkgd:
+        plt.show()
+    else:
         plt.close()
     
+    ######################### Return data dictionary #################################
     
-    ######################### Create dictionary ##################################
-    # return python dictionary with bins, CV, & fractional uncertainties 
-    d = { 
-       "bins" : nbins, 
-        "CV" : list(n[-1]), 
-        "background_counts" : list(n2[-1])
+    return {
+        'bins': b,
+        'CV': [np.nansum(n[-1])],
+        'background_counts': [np.nansum(n2[-1])]
     }
 
-    return d
-
-########################################################################    
+########################################################################
