@@ -1,0 +1,15 @@
+
+# Ignore common generated and large assets
+*.pdf
+*.svg
+*.csv
+
+# BDT model and training data folders
+BDT_models/
+BDT_training_data/
+
+# Python cache
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+
