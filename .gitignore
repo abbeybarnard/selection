@@ -5,6 +5,7 @@ __pycache__/
 
 # editor (optional)
 .vscode/
+!.vscode/settings.json
 
 # figures
 *.pdf
