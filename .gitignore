@@ -1,0 +1,16 @@
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# editor (optional)
+.vscode/
+
+# figures
+*.pdf
+*.svg
+plots/
+
+# models & data (if you choose to ignore)
+BDT_models/
+BDT_training_data/
