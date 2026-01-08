@@ -50,52 +50,8 @@ from IPython.display import display
 # data:  beam ON data 
 
 ########################################################################
-
-########################################################################
 ######################## selection functions ###########################
-# construct the truth opening angle - this function needs work 
-# NO LONGER IN USE 
-def true_opening_angle(df): 
-    
-    # compute the magnitude of all the MC Particles
-    df['mc_p'] = (df['mc_px']*df['mc_px']+df['mc_py']*df['mc_py']+df['mc_pz']*df['mc_pz']).pow(0.5)
-    
-    tksh_angle_truth = []
-    for index, row in df.iterrows(): 
 
-        proton_max_p = 0
-        proton_max_p_idx = 0
-    
-        # for each index in the PDG list 
-        for i in range(len(row['mc_pdg'])): 
-        
-            # check if it is a proton 
-            if row['mc_pdg'][i]==2212: 
-                # check if it is max
-                if row['mc_p'][i]>proton_max_p: 
-                    # if so, replace
-                    proton_max_p = row['mc_p2'][i]
-                    proton_max_p_idx = i 
-                
-        # now use the leading proton index to compute the opening angle 
-        proton_p = [ row['mc_px'][i], row['mc_py'][i], row['mc_pz'][i] ]
-    
-        # and construct electron vector (should be norm'd already)
-        elec_p = [ row['elec_px'], row['elec_py'], row['elec_pz'] ]
-        elec_p_mag = np.sqrt((elec_p[0]*elec_p[0])+(elec_p[1]*elec_p[1])+(elec_p[2]*elec_p[2]))
-    
-        # opening angle 
-        cos = np.dot(proton_p, elec_p) / (proton_max_p*elec_p_mag)
-        if proton_max_p==0 or elec_p_mag==0: 
-            tksh_angle_truth.append(np.nan)
-        
-        else: 
-            tksh_angle_truth.append(cos)
-            
-    df['[true_opening_angle]'] = tksh_angle_truth 
-    
-    return df
-########################################################################
 # use offline flux weights
 def offline_flux_weights(df, ISRUN3): 
     
@@ -398,7 +354,7 @@ def plot_mc(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overlay', sav
     high_err = [ x+y for x,y in zip(n[-1], tot_err)]
     high_err.insert(0, high_err[0])
     
-    plt.fill_between(nbins, low_err, high_err, step="pre", facecolor=(.25, .25, .25, 0), 
+    error_handle = plt.fill_between(nbins, low_err, high_err, step="pre", facecolor=(.25, .25, .25, 0), 
                      edgecolor='darkgray', 
                      hatch='.....', 
                      linewidth=0.0, zorder=2, 
@@ -427,9 +383,23 @@ def plot_mc(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overlay', sav
     ############################################################################## 
    
     # plot format stuff
-    plt.legend(loc='upper right', prop={"size":10}, ncol=2, frameon=False)
+    # flip legend order to match plot_data style
+    label_order_main = [
+        leg['ext'],
+        leg['outfv'], 
+        leg['numu_NC_Npi0'], 
+        leg['numu_CC_Npi0'], 
+        leg['numu_NC_0pi0'], 
+        leg['numu_CC_0pi0'], 
+        leg['nue_NC'], 
+        leg['nue_CCother'], 
+        leg['nuebar_1eNp'], 
+        leg['signal']
+    ]
+    plt.legend(handles=p[::-1] + [error_handle], labels=label_order_main[::-1] + [err_label], loc='upper right', prop={"size":10}, ncol=2, frameon=False)
+
+    plt.text(0.03, 0.95, "MicroBooNE Run 4b RHC", transform=plt.gca().transAxes, fontsize=14, verticalalignment='top')
     
-        
     if y_label: 
         plt.ylabel(y_label, fontsize=15, labelpad=8)
     
@@ -462,7 +432,7 @@ def plot_mc(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overlay', sav
         plt.text(xtext, ytext, text, fontsize='xx-large', horizontalalignment='right')
     
     if save: 
-        plt.savefig(plots_path+var+"_"+save_label+".svg", transparent=False, bbox_inches='tight') 
+        plt.savefig("BDTPlot_Run4bRHC_Comp.svg", transparent=False, bbox_inches='tight') 
         #plt.savefig(plots_path+var+"_"+save_label+".pdf", transparent=True, bbox_inches='tight') 
         print('saving to: '+plots_path)
         
@@ -955,7 +925,6 @@ def plot_data(var, nbins, xlow, xhigh, cuts, datasets, isrun3, bdt_scale=None, s
     }
     
     return d
-
     
 ########################################################################
 # Plot blinded variables for talks 
@@ -1367,6 +1336,35 @@ def addRelevantColumns(datasets):
 
     
     return df_pre
+
+########################################################################
+
+def addRelevantColumns_flexible(datasets, USE_EXT_IN_BDT=True): 
+    """
+    Combine MC and optionally EXT datasets with additional columns needed for BDT analysis.
+    
+    Parameters:
+    - datasets: dictionary containing 'infv', 'outfv', and 'ext'
+    - USE_EXT_IN_BDT: boolean flag to include EXT data in BDT training
+    
+    Returns:
+    - df_pre: combined dataframe ready for BDT training
+    """
+    
+    mc_bdt = pd.concat([datasets['infv'], datasets['outfv']], ignore_index=True, sort=True)
+    mc_bdt['is_mc'] = True 
+    mc_bdt['weight'] = mc_bdt['totweight_data']
+    
+    if USE_EXT_IN_BDT:
+        ext_bdt = datasets['ext']
+        ext_bdt['is_mc'] = False
+        ext_bdt['weight'] = ext_bdt['pot_scale']
+        df_pre = pd.concat([mc_bdt, ext_bdt], ignore_index=True, sort=True)
+    else:
+        df_pre = mc_bdt
+    
+    return df_pre
+
 ########################################################################
 def prep_sets(train, test, train_query, test_query, varlist):
     
@@ -1407,18 +1405,39 @@ def bdt_raw_results(train, test, train_query, test_query, varlist, params, round
     dtrain = d['dtrain']
     dtest = d['dtest']
     
-    model = xgb.train(params, dtrain, rounds)
+    # Track training progress with watchlist and evals_result
+    watchlist = [(dtrain, 'train'), (dtest, 'test')]
+    evals_result = {}
+    
+    model = xgb.train(params, dtrain, rounds, evals=watchlist, evals_result=evals_result, verbose_eval=False)
     preds = model.predict(dtest)
     
     queried_test_df['is_signal'] = dtest.get_label()
     queried_test_df['BDT_score'] = preds
     
-    return queried_test_df, model
+    # Add weight column back from the original test dataframe
+    # Get the queried test indices
+    test_queried = test.query(test_query)
+    if 'weight' in test_queried.columns:
+        queried_test_df['weight'] = test_queried['weight'].values
+    
+    # Convert evals_result to DataFrame for plotting
+    import pandas as pd
+    metrics_df = pd.DataFrame({
+        'train-error': evals_result['train']['error'],
+        'test-error': evals_result['test']['error'],
+        'train-auc': evals_result['train']['auc'],
+        'test-auc': evals_result['test']['auc'],
+        'train-aucpr': evals_result['train']['aucpr'],
+        'test-aucpr': evals_result['test']['aucpr']
+    })
+    
+    return queried_test_df, model, metrics_df
 ########################################################################
-def main_BDT(datasets, train_query, test_query, rounds, training_parameters, isrun3, test_size=0.5):
+def main_BDT(datasets, train_query, test_query, rounds, training_parameters, isrun3, test_size=0.5, USE_EXT_IN_BDT=True):
     
     # combine MC & EXT datasets with additional columns needed for BDT analysis
-    df_pre = addRelevantColumns(datasets)
+    df_pre = addRelevantColumns_flexible(datasets, USE_EXT_IN_BDT=USE_EXT_IN_BDT)
     
     # compute the scale weight for model parameters 
     scale_weight = len(df_pre.query(train_query + ' and is_signal == False')) / len(df_pre.query(train_query + ' and is_signal == True'))
@@ -1449,10 +1468,11 @@ def main_BDT(datasets, train_query, test_query, rounds, training_parameters, isr
     }
     
     # datasets get cleaned in bdt_raw_results (prep_sets)
-    bdt_results_df, bdt_model  = bdt_raw_results(df_pre_train, df_pre_test, train_query, test_query, training_parameters, params, rounds)
+    queried_test_df, bdt_model, metrics_df = bdt_raw_results(df_pre_train, df_pre_test, train_query, test_query, training_parameters, params, rounds)
     
     d = {
-        'bdt_results_df': bdt_results_df, 
+        'bdt_results_df': metrics_df,  # DataFrame with training metrics (error, auc, aucpr) 
+        'queried_test_df': queried_test_df,  # Test predictions
         'bdt_model': bdt_model, 
         'df_pre_train': df_pre_train, 
         'df_pre_test': df_pre_test, 
@@ -1507,8 +1527,8 @@ def bdt_metrics(train, test, train_query, test_query, training_parameters, isrun
     
     
     if isrun3: 
-        plt.title('RHC Run 3 BDT AUC', fontsize=15)
-        plt.ylim(0.68, 0.79)
+        plt.title('Run 4b RHC BDT AUC', fontsize=15)
+        plt.ylim(0.62, 0.79)
     else: 
         plt.title('FHC Run 1 BDT AUC', fontsize=15)
     
@@ -1516,7 +1536,7 @@ def bdt_metrics(train, test, train_query, test_query, training_parameters, isrun
     #plt.ylim(0.75, 0.8)
     
     if save: 
-        plt.savefig(parameters(isrun3)['plots_path']+"BDT_AUC.pdf", transparent=True, bbox_inches='tight') 
+        plt.savefig("BDT_AUC.pdf", transparent=True, bbox_inches='tight') 
     plt.show()
     
     
@@ -1530,7 +1550,7 @@ def bdt_metrics(train, test, train_query, test_query, training_parameters, isrun
     plt.legend(loc='upper left', prop={"size":13})
     
     if isrun3: 
-        plt.title('RHC Run 3 BDT AUCPR', fontsize=15)
+        plt.title('Run 4b RHC BDT AUCPR', fontsize=15)
     else: 
         plt.title('FHC Run 1 BDT AUCPR', fontsize=15)
         
@@ -1538,17 +1558,17 @@ def bdt_metrics(train, test, train_query, test_query, training_parameters, isrun
     plt.yticks(fontsize=13)
     
     plt.xlabel('Number of Boosting Rounds', fontsize=14)
-    #plt.ylim(0.7, 0.9)
+    # plt.ylim(0.7, 0.9)
     
     if save: 
-        plt.savefig(parameters(isrun3)['plots_path']+"BDT_AUCPR.pdf", transparent=True, bbox_inches='tight') 
+        plt.savefig("BDT_AUCPR.pdf", transparent=True, bbox_inches='tight') 
     plt.show()
     
     
     #for metric in progress['train'].keys():
     #    plt.figure(figsize=(10, 5))
     #    plt.plot(progress['train'][metric], color='orange', label='train '+metric, markersize=3)
-        #plt.plot(progress['valid'][metric], color='blue', label='test '+metric, markersize=3)  
+    #    plt.plot(progress['valid'][metric], color='blue', label='test '+metric, markersize=3)  
     #    plt.grid(linestyle=":")
     #    plt.legend(loc='upper right', prop={"size":13})
     #    plt.xlabel('# of rounds')
@@ -1556,7 +1576,7 @@ def bdt_metrics(train, test, train_query, test_query, training_parameters, isrun
         
 ########################################################################
 # BDT Purity/Efficiency 
-def bdt_pe(df, xvals, gen_data, gen_intrinsic, split):
+def bdt_pe(df, xvals, gen_data, gen_intrinsic, split=1.0, test_size=None):
     
     ########################
     # df --> dataframe with evaluated BDT_score added 
@@ -1570,6 +1590,23 @@ def bdt_pe(df, xvals, gen_data, gen_intrinsic, split):
     effErr=[]
     
 
+
+    # Accept either the historic `split` positional arg or the newer `test_size` keyword
+    if test_size is not None:
+        split = test_size
+    else:
+        # If user passed `gen_data` from the full dataset but `df` is only the test set,
+        # attempt to auto-compute the split fraction based on summed signal weights
+        # so weighted generated counts are used for efficiency calculations.
+        try:
+            sig_weights_in_df = np.nansum(df.query('is_signal == True').weight)
+            total_gen_weights = np.nansum(gen_data) if len(gen_data) > 0 else 0.0
+            if total_gen_weights > 0:
+                split = float(sig_weights_in_df) / float(total_gen_weights)
+        except Exception:
+            # If any issue occurs (e.g., gen_data not array-like), fall back to provided split
+            pass
+
     for cut_val in xvals:
     
         
@@ -1578,21 +1615,34 @@ def bdt_pe(df, xvals, gen_data, gen_intrinsic, split):
         
         # total signal selected
         tot_sel_sig = np.nansum(df.query(q+' and is_signal == True').weight)
-        
+
         # total events selected
         tot_sel = np.nansum(df.query(q).weight)
-        
-        # total signal generated
-        tot_sig = np.nansum(gen_data)*split # only include the amount of dataset used for TESTING
-        tot_sig_intrinsic = np.nansum(gen_intrinsic)*split # for error computation, use the intrinsic event count
-        
-        p = tot_sel_sig / tot_sel
-        purity.append(p * 100)
-        purErr.append( p * np.sqrt( sum(df.query(q+' and is_signal==True').weight**2)/sum(df.query(q+' and is_signal==True').weight)**2 + sum(df.query(q).weight**2)/sum(df.query(q).weight)**2 )  *100)
-        
-        e = tot_sel_sig / tot_sig
-        eff.append(e * 100)
-        effErr.append(np.sqrt( (e * (1-e)) / tot_sig_intrinsic ) * 100)
+
+        # total signal generated (scale by split fraction)
+        tot_sig = np.nansum(gen_data) * split if len(gen_data) > 0 else 0.0
+        tot_sig_intrinsic = np.nansum(gen_intrinsic) * split if len(gen_intrinsic) > 0 else 0.0
+
+        # Purity: protect against division by zero
+        if tot_sel == 0:
+            purity.append(0.0)
+            purErr.append(0.0)
+        else:
+            p = tot_sel_sig / tot_sel
+            purity.append(p * 100)
+            try:
+                purErr.append(p * np.sqrt(sum(df.query(q+' and is_signal==True').weight**2) / sum(df.query(q+' and is_signal==True').weight)**2 + sum(df.query(q).weight**2) / sum(df.query(q).weight)**2) * 100)
+            except Exception:
+                purErr.append(0.0)
+
+        # Efficiency: protect against zero generated signal
+        if tot_sig == 0 or tot_sig_intrinsic == 0:
+            eff.append(0.0)
+            effErr.append(0.0)
+        else:
+            e = tot_sel_sig / tot_sig
+            eff.append(e * 100)
+            effErr.append(np.sqrt((e * (1 - e)) / tot_sig_intrinsic) * 100)
         
         
     d = {
@@ -1605,23 +1655,24 @@ def bdt_pe(df, xvals, gen_data, gen_intrinsic, split):
     return d
 
 ########################################################################
-########################################################################
 def split_events(df):
+
+    # Remember to turn back on EXT stuff if you want to do BDT with EXT included!
     
     #separate by in/out FV & cosmic 
-    ext_bdt = df.query('is_mc==False')
+    # ext_bdt = df.query('is_mc==False')
     outfv_bdt = df.query(out_fv_query+' and is_mc==True')
     #cosmic_bdt = df.query(in_fv_query+' and nu_purity_from_pfp<=0.5 and is_mc==True')
     infv_bdt = df.query(in_fv_query+' and is_mc==True')
     
     # checks 
-    print('split_events check:', len(df) == len(ext_bdt)+len(outfv_bdt)+len(infv_bdt))#+len(cosmic))
+    print('split_events check:', len(df) == len(outfv_bdt)+len(infv_bdt))#+len(cosmic))
     
     d = {
         'infv': infv_bdt, 
         'outfv': outfv_bdt, 
         #'cosmic': cosmic_bdt, 
-        'ext': ext_bdt
+        # 'ext': ext_bdt
     }
     
     return d
@@ -1672,7 +1723,7 @@ def bdt_pe_plot(perf, xvals, isrun3, split, save=False):
     
 ########################################################################    
 def bdt_box_plot(results_bdt, xvals, isrun3, second_results_bdt=None, results_box=None, results_box_err=None, save=False, 
-                save_label=None, title=None):
+                save_label=None, title=None, target_purity=None):
     
     ###################
     # results_bdt --> BDT performance (output of bdt_pe function)
@@ -1688,9 +1739,48 @@ def bdt_box_plot(results_bdt, xvals, isrun3, second_results_bdt=None, results_bo
     
     # Loose cut BDT results
     pur, purErr, eff, effErr = results_bdt
-    
+    pur = np.array(pur)
+    eff = np.array(eff)
+    purErr = np.array(purErr)
+    effErr = np.array(effErr)
+
     plt.errorbar(xvals, pur, yerr=purErr, marker='o', color='maroon', label='BDT Purity', markersize=3)
     plt.errorbar(xvals, eff, yerr=effErr, marker='o', color='green', label='BDT Efficiency', markersize=3)  
+
+    # If a target purity is specified, find the closest BDT cut and annotate the plot
+    if target_purity is not None:
+        try:
+            # find index with purity closest to target
+            idx = int(np.argmin(np.abs(pur - float(target_purity))))
+            cut_val = xvals[idx]
+
+            # Draw vertical line at the cut
+            plt.axvline(cut_val, color='gray', linestyle='--', linewidth=1)
+
+            # Draw horizontal line at target purity
+            plt.axhline(target_purity, color='maroon', linestyle=':', linewidth=1)
+
+            # Use circle markers for intersections
+            plt.plot(cut_val, pur[idx], marker='o', color='maroon', markersize=8, markeredgecolor='darkred', markeredgewidth=0.8)
+            plt.plot(cut_val, eff[idx], marker='o', color='green', markersize=8, markeredgecolor='darkgreen', markeredgewidth=0.8)
+
+            # Compute offsets so annotations sit a bit to the left (purity) and right (efficiency) and above the markers
+            xvals_arr = np.array(xvals)
+            x_range = float(xvals_arr[-1] - xvals_arr[0]) if xvals_arr.size > 1 else 0.1
+            x_off = x_range * 0.04
+            y_off = 6.0
+
+            # Annotate with only the numeric values (no labels).
+            # Purity on the left, efficiency on the right.
+            plt.text(cut_val - x_off, pur[idx] + y_off, f'{pur[idx]:.1f}%', color='maroon', horizontalalignment='right', fontsize=10)
+            plt.text(cut_val + x_off, eff[idx] + y_off, f'{eff[idx]:.1f}%', color='green', horizontalalignment='left', fontsize=10)
+
+            # Print the cut and associated metrics to stdout
+            print(f"Target purity {target_purity}% -> BDT cut > {cut_val:.3f}")
+            print(f"  BDT Purity: {pur[idx]:.2f}% ± {purErr[idx]:.2f}%")
+            print(f"  BDT Efficiency: {eff[idx]:.2f}% ± {effErr[idx]:.2f}%")
+        except Exception:
+            pass
     
 
     # Box cut results 
@@ -1716,17 +1806,16 @@ def bdt_box_plot(results_bdt, xvals, isrun3, second_results_bdt=None, results_bo
     plt.xticks(fontsize=12)
     plt.xlim(0, xvals[-1])
     plt.yticks(np.arange(0,105,5), fontsize=12)
-    plt.legend(prop={"size":12}, loc='upper left')
+    plt.legend(prop={"size":11}, loc='upper left')
     plt.ylim(0, 100)
     if title: 
         plt.title(title, fontsize=15)
     #plt.tight_layout()
     if save: 
-        plt.savefig(plots_path+"BDT_performance_"+save_label+".pdf", transparent=True, bbox_inches='tight') 
+        plt.savefig("BDT_performance_"+save_label+".pdf", transparent=True, bbox_inches='tight') 
 
     
     plt.show()  
-########################################################################   
 
 ########################################################################
 def plot_mc_no_ext(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overlay', save=False, save_label=None, log=False, x_label=None, xmax=None, y_label=None, ymax=None, bdt_scale=None, text=None, xtext=None, ytext=None, osc=None, plot_bkgd=False, sys=None, x_ticks=None, is_flugg_reweight=False, bin_norm=1.0):
@@ -2123,5 +2212,261 @@ def plot_mc_no_ext(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overla
         'CV': [np.nansum(n[-1])],
         'background_counts': [np.nansum(n2[-1])]
     }
+
+########################################################################
+######################### Training Data Functions ######################
+########################################################################
+
+def load_training_data(filename='BDT_training_data/training_data_run4brhc_scaled_noext.pkl'):
+    """
+    Load training data that was saved during BDT training.
+    Returns all the components needed for SHAP analysis.
+    """
+    import pickle
+    import os
+    
+    if not os.path.exists(filename):
+        print(f"❌ Training data file not found: {filename}")
+        print("   Run BDT training with save_bdt=True to create this file")
+        return None
+    
+    try:
+        with open(filename, 'rb') as f:
+            data_package = pickle.load(f)
+        
+        print("✅ Training data loaded successfully!")
+        print(f"   - Saved on: {data_package.get('timestamp', 'Unknown')}")
+        print(f"   - Training events: {len(data_package['train_df']):,}")
+        print(f"   - Test events: {len(data_package['test_df']):,}")
+        print(f"   - Features: {len(data_package['training_parameters'])}")
+        print(f"   - Split ratio: {data_package.get('split_ratio', 'Unknown')}")
+        print(f"   - Model path: {data_package.get('model_path', 'Unknown')}")
+        
+        return data_package
+        
+    except Exception as e:
+        print(f"❌ Error loading training data: {e}")
+        return None
+
+########################################################################   
+
+def load_training_data_for_shap(filename='BDT_training_data/training_data_run4brhc_scaled_noext.pkl'):
+    """
+    Load training data and format it for SHAP analysis.
+    
+    Parameters:
+    - filename: Path to the training data pickle file
+    
+    Returns:
+    - X_train, y_train, X_test, y_test, feature_names: Formatted training data
+    - data_package: Original data package for additional metadata
+    """
+    import os
+    
+    # First check what training data files are available
+    training_dir = 'BDT_training_data'
+    if os.path.exists(training_dir):
+        available_files = [f for f in os.listdir(training_dir) if f.endswith('.pkl')]
+        if available_files:
+            print(f"📁 Available training data files:")
+            for i, f in enumerate(available_files, 1):
+                file_path = os.path.join(training_dir, f)
+                file_size = os.path.getsize(file_path) / (1024*1024)  # MB
+                mod_time = pd.Timestamp.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d %H:%M')
+                print(f"   {i}. {f} ({file_size:.1f} MB, modified {mod_time})")
+        else:
+            print("📁 No training data files found in BDT_training_data/")
+    else:
+        print("📁 BDT_training_data directory does not exist")
+    
+    # Load the specified file
+    data_package = load_training_data(filename)
+    if data_package is None:
+        return None, None, None, None, None, None
+    
+    try:
+        # Extract and format components for SHAP
+        train_df = data_package['train_df']
+        test_df = data_package['test_df']
+        training_parameters = data_package['training_parameters']
+        
+        # Prepare data in SHAP format
+        X_train = train_df[training_parameters]
+        y_train = train_df['is_signal']
+        X_test = test_df[training_parameters]
+        y_test = test_df['is_signal']
+        feature_names = training_parameters
+        
+        print(f"✅ Data formatted for SHAP analysis:")
+        print(f"   - X_train shape: {X_train.shape}")
+        print(f"   - X_test shape: {X_test.shape}")
+        print(f"   - Features: {len(feature_names)}")
+        
+        return X_train, y_train, X_test, y_test, feature_names, data_package
+        
+    except Exception as e:
+        print(f"❌ Error formatting data for SHAP: {e}")
+        return None, None, None, None, None, None
+
+########################################################################   
+
+def reconstruct_training_data(datasets, train_query, test_query, split_ratio=0.35, random_state=17, USE_EXT_IN_BDT=False):
+    """
+    Recreate the training data using the same parameters as the original BDT training.
+    This is useful when you have a trained model but no saved training data.
+    
+    Parameters:
+    - datasets: your original datasets dictionary
+    - train_query, test_query: the queries used for training
+    - split_ratio: test size used in train_test_split
+    - random_state: same random state used in original training
+    - use_ext: whether EXT was included in training
+    
+    Returns:
+    - train_df, test_df: reconstructed training and test sets
+    """
+    try:
+        # Import required function
+        from sklearn.model_selection import train_test_split
+        
+        # Recreate the pre-training dataset using the same logic
+        df_pre = addRelevantColumns_flexible(datasets, USE_EXT_IN_BDT=USE_EXT_IN_BDT)
+        
+        print(f"📊 Reconstructing training data...")
+        print(f"   - Total events: {len(df_pre):,}")
+        print(f"   - Using split ratio: {split_ratio}")
+        print(f"   - Random state: {random_state}")
+        print(f"   - Include EXT: {USE_EXT_IN_BDT}")
+        
+        # Recreate the train/test split with the same parameters
+        df_pre_train, df_pre_test = train_test_split(
+            df_pre, 
+            test_size=split_ratio, 
+            random_state=random_state, 
+            stratify=df_pre['is_signal']
+        )
+        
+        print(f"✅ Training data reconstructed!")
+        print(f"   - Training events: {len(df_pre_train):,}")
+        print(f"   - Test events: {len(df_pre_test):,}")
+        print(f"   - Signal in training: {len(df_pre_train[df_pre_train['is_signal']==True]):,}")
+        print(f"   - Background in training: {len(df_pre_train[df_pre_train['is_signal']==False]):,}")
+        
+        return df_pre_train, df_pre_test
+        
+    except Exception as e:
+        print(f"❌ Error reconstructing training data: {e}")
+        return None, None
+
+########################################################################
+
+def draw_root_like(x, bins='auto', weights=None, title=None, xlabel=None, ylabel=None,
+                   density=False, logy=False, show_stats=True, range=None, ax=None,
+                   histtype='step', color='black', nbins=50, max_value=None):
+    """
+    Simple ROOT-like Draw for a 1D array-like `x`.
+    
+    Parameters:
+    - x: array-like (numpy, pandas Series, awkward flattened array)
+    - bins: 'auto', int, or array of bin edges
+    - weights: same length as x or None
+    - density: if True, plot pdf
+    - logy: if True, use log scale on y
+    - show_stats: draws basic statistics box (entries, mean, rms)
+    - range: tuple (xmin,xmax)
+    - ax: matplotlib Axes
+    - histtype: 'step' by default  
+    - color: line color
+    - nbins: number of bins if bins='auto'
+    - max_value: maximum y-axis value
+    
+    Returns:
+    - ax: matplotlib Axes object
+    """
+    import numpy as np
+    import matplotlib.pyplot as plt
+    
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(7,5))
+    else:
+        fig = ax.figure
+
+    # Convert awkward arrays to numpy if needed
+    try:
+        import awkward as ak
+        if ak.is_awkward(x):
+            x = ak.to_numpy(ak.flatten(x))
+    except Exception:
+        pass
+
+    x = np.asarray(x)
+    if range is not None:
+        # restrict values to the requested range for auto binning / stats
+        mask = np.ones_like(x, dtype=bool)
+        mask &= np.isfinite(x)
+        if range[0] is not None:
+            mask &= (x >= range[0])
+        if range[1] is not None:
+            mask &= (x <= range[1])
+        x = x[mask]
+        if weights is not None:
+            weights = np.asarray(weights)[mask]
+
+    # choose bins
+    if bins == 'auto':
+        # Freedman–Diaconis rule as a decent automatic choice
+        q75, q25 = np.nanpercentile(x, [75, 25]) if len(x)>0 else (0,0)
+        iqr = q75 - q25
+        if iqr == 0:
+            bin_width = (np.nanmax(x) - np.nanmin(x)) / nbins if np.nanmax(x) != np.nanmin(x) else 1.0
+        else:
+            bin_width = 2 * iqr * (len(x) ** (-1/3))
+        if bin_width == 0 or np.isnan(bin_width) or np.isinf(bin_width):
+            nb = nbins
+        else:
+            nb = max(1, int(np.ceil((np.nanmax(x) - np.nanmin(x)) / bin_width)))
+        if nb <= 0:
+            nb = nbins
+        bins = nb
+            
+    # plot
+    counts, edges, patches = ax.hist(x, bins=bins, weights=weights, histtype=histtype,
+                                     density=density, range=range, color=color)
+    ax.set_xlabel(xlabel if xlabel else '')
+    ax.set_ylabel(ylabel if ylabel else ('Counts (normalized)' if density else 'Counts'))
+    if title:
+        ax.set_title(title)
+    if logy:
+        ax.set_yscale('log')
+    if max_value is not None:
+        ax.set_ylim(0, max_value)
+
+    if show_stats:
+        # compute basic stats with/without weights
+        if weights is None:
+            n = np.sum(np.isfinite(x))
+            mean = np.nanmean(x) if n>0 else np.nan
+            rms = np.nanstd(x) if n>0 else np.nan
+        else:
+            w = np.asarray(weights)
+            # align lengths (already masked above)
+            mask = np.isfinite(x) & np.isfinite(w)
+            if np.sum(mask) == 0:
+                n = 0
+                mean = np.nan
+                rms = np.nan
+            else:
+                xw = x[mask]
+                ww = w[mask]
+                n = np.sum(ww)
+                mean = np.sum(xw * ww) / np.sum(ww)
+                rms = np.sqrt(np.sum(ww * (xw - mean)**2) / np.sum(ww))
+        statbox = f"Entries = {int(np.nansum(np.ones_like(x)))}\nMean = {mean:.3g}\nRMS = {rms:.3g}"
+        # put a small box on the top-right of the plot
+        ax.text(0.98, 0.95, statbox, transform=ax.transAxes, ha='right', va='top',
+                bbox=dict(facecolor='white', edgecolor='black', alpha=0.8), fontsize=9)
+
+    plt.tight_layout()
+    return ax
 
 ########################################################################

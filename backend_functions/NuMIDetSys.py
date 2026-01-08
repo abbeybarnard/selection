@@ -121,13 +121,6 @@ class NuMIDetSys:
             df.loc[ df['weightSplineTimesTune'] == np.inf, 'weightSplineTimesTune' ] = 1.
             df.loc[ df['weightSplineTimesTune'] > 100, 'weightSplineTimesTune' ] = 1.
             df.loc[ np.isnan(df['weightSplineTimesTune']) == True, 'weightSplineTimesTune' ] = 1.
-            
-            # bool for is signal vs is not signal 
-            # df['is_signal'] = np.where((df.swtrig_pre == 1) 
-            #                  & (df.nu_pdg==12) & (df.ccnc==0) & (df.nproton>0) & (df.npion==0) & (df.npi0==0)
-            #                  & (10 <= df.true_nu_vtx_x) & (df.true_nu_vtx_x <= 246)
-            #                  & (-106 <= df.true_nu_vtx_y) & (df.true_nu_vtx_y <= 106)
-            #                  & (10 <= df.true_nu_vtx_z) & (df.true_nu_vtx_z <= 1026), True, False)
 
             df['is_signal'] = np.where((df.nu_pdg==12) & (df.ccnc==0) & (df.nproton>0) & (df.npion==0) & (df.npi0==0)
                              & (10 <= df.true_nu_vtx_x) & (df.true_nu_vtx_x <= 246)
@@ -135,10 +128,6 @@ class NuMIDetSys:
                              & (10 <= df.true_nu_vtx_z) & (df.true_nu_vtx_z <= 1026), True, False)
             
             print('is_signal check:', len(df) == len(df.query('is_signal==True')) + len(df.query('is_signal==False')))
-        
-        # software trigger 
-        # df_standard = df_standard.query('swtrig_pre==1')
-        # df_intrinsic = df_intrinsic.query('swtrig_pre==1')
         
         # scale to beam on POT
         df_standard['pot_scale'] = beamon_pot/standard_dict.get(variation)    

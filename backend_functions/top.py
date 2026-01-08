@@ -20,39 +20,66 @@ import matplotlib.pyplot as plt
 
 reco_in_fv_query = "10<=reco_nu_vtx_sce_x<=246 and -106<=reco_nu_vtx_sce_y<=106 and 10<=reco_nu_vtx_sce_z<=1026"
 
+### BDT TRAINING VARIABLES ###
 training_parameters = [
-        "shr_score", "shrmoliereavg", "trkpid",
-        "shr_tkfit_dedx_Y", "tksh_distance", 
-        "subcluster", "trkshrhitdist2"]
+        "shr_tkfit_dedx_Y", "shr_tkfit_gap10_dedx_Y", "shr_tkfit_2cm_dedx_Y",
+        "pfng2hipfrac", "pfng2hipavrg", "ng2hip_r1cm", "ng2hip_r10cm",
+        "pfng2shrfrac", "pfng2shravrg", "shrmoliereavg", "subcluster",
+        "tksh_distance", "trkshrhitdist2"]
     
-selection_variables = ['nslice', "reco_nu_vtx_sce_x", "reco_nu_vtx_sce_y", "reco_nu_vtx_sce_z", 
+selection_variables = ['slice_orig_pass_id', "reco_nu_vtx_sce_x", "reco_nu_vtx_sce_y", "reco_nu_vtx_sce_z", 
                       "contained_fraction",  'n_tracks_contained', 
-                       'trk_energy', 'shr_score', 'shrmoliereavg', 'trkpid', 
-                      'n_showers_contained', 'shr_tkfit_dedx_Y', 'tksh_distance', 
+                       'trk_energy', 'shrmoliereavg', 'trkpid', 
+                      'n_showers_contained', 'n_tracks_contained', 'shr_tkfit_dedx_Y', 'tksh_distance', 
                        'tksh_angle', 'trkshrhitdist2', 'subcluster']
 
+# # quality cuts
+# BDT_PRE_QUERY = 'swtrig_pre==1 and nslice==1'
+# BDT_PRE_QUERY += ' and ' + reco_in_fv_query
+# BDT_PRE_QUERY +=' and contained_fraction>0.9'
+
+# # signal definition - shower constraints
+# BDT_PRE_QUERY += ' and n_showers_contained==1'
+
+# # signal definition - track constraints
+# BDT_PRE_QUERY += ' and n_tracks_contained>0'
+# BDT_PRE_QUERY += ' and trk_energy>0.04' 
+    
+# BDT_LOOSE_CUTS = BDT_PRE_QUERY
+
+# # loose shower constraints
+# BDT_LOOSE_CUTS +=' and shr_score<0.3'
+# BDT_LOOSE_CUTS += ' and shrmoliereavg<15'
+# BDT_LOOSE_CUTS += ' and shr_tkfit_dedx_Y<7'
+
+# # loose track constraints
+# BDT_LOOSE_CUTS += ' and trkpid<0.35'
+# BDT_LOOSE_CUTS += ' and tksh_distance<12'
+
 # quality cuts
-BDT_PRE_QUERY = 'swtrig_pre==1 and nslice==1'
+BDT_PRE_QUERY = 'swtrig_pre == 1'
+BDT_PRE_QUERY += ' and slice_orig_pass_id == 1' 
 BDT_PRE_QUERY += ' and ' + reco_in_fv_query
-BDT_PRE_QUERY +=' and contained_fraction>0.9'
+BDT_PRE_QUERY +=' and contained_fraction > 0.9'
 
 # signal definition - shower constraints
-BDT_PRE_QUERY += ' and n_showers_contained==1'
+BDT_PRE_QUERY += ' and n_showers_contained == 1'
+
+# signal definition - michel electron phase space constraint
+BDT_PRE_QUERY += ' and shr_energy_tot_cali > 0.07'
 
 # signal definition - track constraints
-BDT_PRE_QUERY += ' and n_tracks_contained>0'
-BDT_PRE_QUERY += ' and trk_energy>0.04' 
-    
+BDT_PRE_QUERY += ' and n_tracks_contained > 0'
+BDT_PRE_QUERY += ' and trk_energy > 0.04'
+
 BDT_LOOSE_CUTS = BDT_PRE_QUERY
 
 # loose shower constraints
-BDT_LOOSE_CUTS +=' and shr_score<0.3'
-BDT_LOOSE_CUTS += ' and shrmoliereavg<15'
-BDT_LOOSE_CUTS += ' and shr_tkfit_dedx_Y<7'
+BDT_LOOSE_CUTS += ' and shrmoliereavg < 15'
 
-# loose track constraints
-BDT_LOOSE_CUTS += ' and trkpid<0.35'
-BDT_LOOSE_CUTS += ' and tksh_distance<12'
+# loose track constraints (including NuGraph variables)
+BDT_LOOSE_CUTS += ' and trkpid < 0.35'
+BDT_LOOSE_CUTS += ' and tksh_distance < 12'
 
 ######################### analysis parameters ##############################
 # set the POT & plots_path for plotting
@@ -77,6 +104,7 @@ def parameters(ISRUN3):
         plots_path = "/Users/abarnard/phd/ccnp/uBNuMI_CC1eNp/plots/fhc/"
         cv_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run1/slimmed/" 
         full_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run1/unslimmed/"
+        run4b_path = "/pnfs/uboone/persistent/users/uboonepro/surprise/run4b_full_samples/wc_processed/NuMI/"
         
         dirt_tune = 0.65 # validated
         
@@ -101,12 +129,14 @@ def parameters(ISRUN3):
         plots_path = "/Users/abarnard/phd/ccnp/uBNuMI_CC1eNp/plots/rhc/"
         cv_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run3b/slimmed/"
         full_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run3b/unslimmed/"
+        run4b_path = "/pnfs/uboone/persistent/users/uboonepro/surprise/run4b_full_samples/wc_processed/NuMI/"
         
         dirt_tune = 0.45 # validated
         
-        beamon_pot = 5.014E20
+        # beamon_pot = 5.013E20
+        beamon_pot = 2.527e+20
         
-        NUE = 'numi_nue_run3'
+        NUE = 'checkout_MCC9.10_Run4b_NuMI_RHC_nue_overlay_surprise_v10_04_07_09_reco2_hist'
 
         # OLD INTEGRATED FLUX
         #integrated_flux_per_pot =  8.6283762e-12 #3.2774914e-12 # [ nu / cm^2 / POT]  , includes 60 MeV neutrino energy threshold
@@ -114,10 +144,9 @@ def parameters(ISRUN3):
         # New integrated flux!
         integrated_flux_per_pot =  9.02463e-12 #3.2774914e-12 # [ nu / cm^2 / POT]  , includes 60 MeV neutrino energy threshold
         
-        bdt_model = 'BDT_models/bdt_RHC_may2022_subset.model'
-        # bdt_model = 'BDT_models/test_rhc_sept24.model' # MY TEST MODEL FOR DL VERTEXING + SHOWER!
+        bdt_model = 'BDT_models/test_run4brhc_scaled_noext_noshrscore.model'
 
-        bdt_score_cut = 0.575 
+        bdt_score_cut = 0.55 
         
         detsys = 0.129 #0.133
         
@@ -126,6 +155,7 @@ def parameters(ISRUN3):
         "plots_path" : plots_path, 
         "cv_ntuple_path" : cv_ntuple_path, 
         "full_ntuple_path" : full_ntuple_path, 
+        "run4b_path" : run4b_path,
         "dirt_tune" : dirt_tune, 
         "ext_tune" : ext_tune, 
         "beamon_pot" : beamon_pot, 
@@ -145,26 +175,6 @@ def parameters(ISRUN3):
 
 in_fv_query = "10<=true_nu_vtx_x<=246 and -106<=true_nu_vtx_y<=106 and 10<=true_nu_vtx_z<=1026"
 out_fv_query = "((true_nu_vtx_x<10 or true_nu_vtx_x>246) or (true_nu_vtx_y<-106 or true_nu_vtx_y>106) or (true_nu_vtx_z<10 or true_nu_vtx_z>1026))"
-
-# numu_CC_Npi0 = 'swtrig_pre==1 and ((nu_pdg==14 or nu_pdg==-14) and ccnc==0 and npi0>=1)'
-# numu_CC_0pi0 = 'swtrig_pre==1 and ((nu_pdg==14 or nu_pdg==-14) and ccnc==0 and npi0==0)'
-
-# numu_NC_Npi0 = 'swtrig_pre==1 and ((nu_pdg==14 or nu_pdg==-14) and ccnc==1 and npi0>=1)'
-# numu_NC_0pi0 = 'swtrig_pre==1 and ((nu_pdg==14 or nu_pdg==-14) and ccnc==1 and npi0==0)'
-
-# nuebar_1eNp = 'swtrig_pre==1 and ((nu_pdg==-12 and ccnc==0 and nproton>0 and npion==0 and npi0==0))'
-# nue_NC = 'swtrig_pre==1 and ((nu_pdg==12 or nu_pdg==-12) and ccnc==1)'
-
-# nue_CCother = 'swtrig_pre==1 and (((nu_pdg==12 and ccnc==0) and (nproton==0 or npi0>0 or npion>0)) or (nu_pdg==-12 and ccnc==0 and (nproton==0 or npion>0 or npi0>0)))'
-
-# # less specific categories 
-# nue_other = 'swtrig_pre==1 and (((nu_pdg==12 or nu_pdg==-12) and ccnc==1) or (( (nu_pdg==12 or nu_pdg==-12) and ccnc==0) and (nproton==0 or npi0>0 or npion>0)))'
-# numu_Npi0 = 'swtrig_pre==1 and ( (nu_pdg==14 or nu_pdg==-14) and npi0>=1)'
-# numu_0pi0 = 'swtrig_pre==1 and ( (nu_pdg==14 or nu_pdg==-14) and npi0==0)'
-
-# # signal vs. not signal 
-# signal = in_fv_query+' and  swtrig_pre==1 and (nu_pdg==12 and ccnc==0 and nproton>0 and npion==0 and npi0==0)'
-# not_signal = "(swtrig_pre==0) or (swtrig_pre==1 and (" + out_fv_query+' or (nu_pdg!=12) or (nu_pdg==12 and ccnc==1) or (nu_pdg==12 and ccnc==0 and (nproton==0 or npi0>0 or npion>0))))'
 
 numu_CC_Npi0 = '((nu_pdg==14 or nu_pdg==-14) and ccnc==0 and npi0>=1)'
 numu_CC_0pi0 = '((nu_pdg==14 or nu_pdg==-14) and ccnc==0 and npi0==0)'
@@ -262,17 +272,13 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
     
     if ISRUN3: 
 
-        overlay_pot = 2.1844E21  # Run 4
+        overlay_pot = 2.33807e+21  # Run 4b
         # dirt_pot = 1.67392E21 # david's file
         beamon_pot = 5.013E20 # Normalizing to 1E20 POT for comparison
-        nue_intrinsic_pot = 3.93021E22
+        nue_intrinsic_pot = 5.04447e+22 # Run 4b
 
         beamon_ntrig =  10349610.0 # Triggers of Run 3 data (from Patrick) (think this is an average)
-        beamoff_ntrig = 15764736.750000  # Triggers of Run 4 beam off 
-        # beamoff_ntrig = 17061650.550000 # Run 4 beam off triggers (non-WC processed)
-
-        df_before = df.query('run<16880').copy()
-        df_after = df.query('run>=16880').copy()
+        beamoff_ntrig = 15770854.05  # Triggers of Run 4b beam off 
 
         df_new = df.copy()
         
@@ -288,11 +294,29 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
         elif df_type == "ext": 
             df_new['pot_scale'] = (beamon_ntrig/beamoff_ntrig)*ext_tune
 
-        # elif df_type == "ext": 
-        #     df_before['pot_scale'] = (8526417.0/beamoff_ntrig)*ext_tune
-        #     df_after['pot_scale'] = (1846526.0/beamoff_ntrig)*ext_tune
+        ### UNSCALED VERSION
 
-        #     df_new = pd.concat([df_before, df_after], ignore_index=True, sort=True) 
+        # overlay_pot = 2.33807e+21
+        # # dirt_pot = 1
+        # beamon_pot = 2.527e+20
+        # nue_intrinsic_pot = 5.04447e+22
+
+        # beamon_ntrig = 5418188.0
+        # beamoff_ntrig = 15770854.05
+
+        # df_new = df.copy()
+        
+        # if df_type == 'overlay': 
+        #     df_new['pot_scale'] = beamon_pot/overlay_pot
+
+        # elif df_type == 'intrinsic': 
+        #     df_new['pot_scale'] = beamon_pot/nue_intrinsic_pot
+
+        # # elif df_type == 'dirt': 
+        # #     df_new['pot_scale'] = (beamon_pot/dirt_pot)*dirt_tune
+
+        # elif df_type == "ext": 
+        #     df_new['pot_scale'] = (beamon_ntrig/beamoff_ntrig)*ext_tune
     
     
     else: 
@@ -579,8 +603,7 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
                 "true_nu_vtx_x", "true_nu_vtx_y", "true_nu_vtx_z", "ppfx_cv", "weightSplineTimesTune", "weightTune",
                 "nslice", 
                  "elec_e", "shr_energy_cali", 
-                 "NeutrinoEnergy2", "true_e_visible", 
-                 "opening_angle", "tksh_angle", "nu_e", "true_nu_px", "true_nu_py", "true_nu_pz"] 
+                 "NeutrinoEnergy2", "true_e_visible", "tksh_angle", "nu_e", "true_nu_px", "true_nu_py", "true_nu_pz"] # "opening_angle", 
     
     
     if var not in variables: 
@@ -597,8 +620,8 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
 
     
     # This needs to be full_ntuple_path!
-    f = uproot.open(parameters(ISRUN3)['full_ntuple_path']+parameters(ISRUN3)['NUE']+".root")[fold][tree]
-    df = f.pandas.df(variables, flatten=False)
+    f = uproot.open(parameters(ISRUN3)['run4b_path']+parameters(ISRUN3)['NUE']+".root")[fold][tree]
+    df = pd.DataFrame(f.arrays(variables, library="np"))
 
     # Added in the ppfx_cv cleaning here 
     df.loc[ df['ppfx_cv'] <= 0, 'ppfx_cv' ] = 1.
@@ -615,9 +638,8 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
     df.loc[ df['weightTune'] == np.inf, 'weightTune' ] = 1.
     df.loc[ df['weightTune'] > 30, 'weightTune' ] = 1.
     df.loc[ np.isnan(df['weightTune']) == True, 'weightTune' ] = 1.
-    
-    # df['is_signal'] = np.where((df.swtrig_pre == 1)
-    #                          & (df.nu_pdg==12) & (df.ccnc==0) & (df.nproton>0) & (df.npion==0) & (df.npi0==0)
+
+    # df['is_signal'] = np.where((df.nu_pdg==12) & (df.ccnc==0) & (df.nproton>0) & (df.npion==0) & (df.npi0==0)
     #                          & (10 <= df.true_nu_vtx_x) & (df.true_nu_vtx_x <= 246)
     #                          & (-106 <= df.true_nu_vtx_y) & (df.true_nu_vtx_y <= 106)
     #                          & (10 <= df.true_nu_vtx_z) & (df.true_nu_vtx_z <= 1026), 
@@ -626,8 +648,8 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
     df['is_signal'] = np.where((df.nu_pdg==12) & (df.ccnc==0) & (df.nproton>0) & (df.npion==0) & (df.npi0==0)
                              & (10 <= df.true_nu_vtx_x) & (df.true_nu_vtx_x <= 246)
                              & (-106 <= df.true_nu_vtx_y) & (df.true_nu_vtx_y <= 106)
-                             & (10 <= df.true_nu_vtx_z) & (df.true_nu_vtx_z <= 1026), 
-                               True, False)
+                             & (10 <= df.true_nu_vtx_z) & (df.true_nu_vtx_z <= 1026)
+                             & (df.elec_e>0.07), True, False) # Set the Michel electron phase space veto here
     
     df['NeutrinoEnergy2_GeV'] = df['NeutrinoEnergy2']/1000
 
@@ -647,7 +669,8 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
     #df_signal['weightTune'] = [1 for x in range(len(df_signal))]
 
     df_signal['totweight_data'] = df_signal['ppfx_cv']*df_signal['pot_scale']*df_signal['weightSplineTimesTune']
-    df_signal['totweight_intrinsic'] = df_signal['ppfx_cv']*df_signal['weightSplineTimesTune']
+    df_signal['totweight_intrinsic'] = df_signal['ppfx_cv']*df_signal['weightSplineTimesTune'
+    ]
     
     if isFlugg:
         df_signal['totweight_data_flugg'] = df_signal['ppfx_cv']*df_signal['pot_scale']*df_signal['weightSplineTimesTune']*df_signal['flugg_reweight']
@@ -699,9 +722,18 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
                 bin_query = var+'>='+str(bins[i])+' and '+var+'<'+str(bins[i+1])
 
             generated_sumw2.append( sum(df_signal.query(bin_query).totweight_data ** 2) )
-
-
     
+    elif weight=='totweight_intrinsic': 
+        
+        for i in range(len(bins)-1): 
+            
+            if i==len(bins)-2: 
+                bin_query = var+'>='+str(bins[i])+' and '+var+'<='+str(bins[i+1])
+            else: 
+                bin_query = var+'>='+str(bins[i])+' and '+var+'<'+str(bins[i+1])
+
+            generated_sumw2.append( sum(df_signal.query(bin_query).totweight_intrinsic ** 2) )
+
     return n.tolist(), df_weights, generated_sumw2
     
 ########################################################################
