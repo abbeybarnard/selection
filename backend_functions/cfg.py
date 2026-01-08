@@ -15,7 +15,7 @@ def get_variable_info(name_of_variable, ISRUN3, cut_level):
 
   # PROTON MULTIPLICITY
   elif name_of_variable == "Proton Multiplicity":
-    xvar = "n_tracks_contained"
+    xvar = "reco_Nproton"
     true_var = "nproton" # n_protons
     bins = [1, 2, 3, 12]
     xlow = bins[0]

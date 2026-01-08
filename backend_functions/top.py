@@ -18,41 +18,73 @@ import matplotlib.pyplot as plt
 #### no pions above 40 MeV 
 #### within a FV defined by: 10<=true_nu_vtx_x<=246 and -106<=true_nu_vtx_y<=106 and 10<=true_nu_vtx_z<=1026'
 
-reco_in_fv_query = "10<=reco_nu_vtx_sce_x<=246 and -106<=reco_nu_vtx_sce_y<=106 and 10<=reco_nu_vtx_sce_z<=1026"
+# The Pandora reco_in_fv_query is defined here:
+# reco_in_fv_query = "10<=reco_nu_vtx_sce_x<=246 and -106<=reco_nu_vtx_sce_y<=106 and 10<=reco_nu_vtx_sce_z<=1026"
 
+# The WireCell reco_in_fv_query is defined here:
+reco_in_fv_query = "10<=wc3_reco_nuvtxX<=246 and -106<=wc3_reco_nuvtxY<=106 and 10<=wc3_reco_nuvtxZ<=1026"
+
+### BDT TRAINING VARIABLES ###
+# Need to be called by their pandora_ prefix in the dataframe
 training_parameters = [
-        "shr_score", "shrmoliereavg", "trkpid",
-        "shr_tkfit_dedx_Y", "tksh_distance", 
-        "subcluster", "trkshrhitdist2"]
+        "pandora_shr_tkfit_dedx_Y", "pandora_shr_tkfit_gap10_dedx_Y", "pandora_shr_tkfit_2cm_dedx_Y",
+        "pandora_pfng2hipfrac", "pandora_pfng2hipavrg", "pandora_ng2hip_r1cm", "pandora_ng2hip_r10cm",
+        "pandora_pfng2shrfrac", "pandora_pfng2shravrg", "pandora_shrmoliereavg", "pandora_subcluster",
+        "pandora_tksh_distance", "pandora_trkshrhitdist2"]
     
-selection_variables = ['nslice', "reco_nu_vtx_sce_x", "reco_nu_vtx_sce_y", "reco_nu_vtx_sce_z", 
+selection_variables = ['slice_orig_pass_id', "reco_nu_vtx_sce_x", "reco_nu_vtx_sce_y", "reco_nu_vtx_sce_z", 
                       "contained_fraction",  'n_tracks_contained', 
-                       'trk_energy', 'shr_score', 'shrmoliereavg', 'trkpid', 
-                      'n_showers_contained', 'shr_tkfit_dedx_Y', 'tksh_distance', 
+                       'trk_energy', 'shrmoliereavg', 'trkpid', 
+                      'n_showers_contained', 'n_tracks_contained', 'shr_tkfit_dedx_Y', 'tksh_distance', 
                        'tksh_angle', 'trkshrhitdist2', 'subcluster']
 
+# # quality cuts
+# BDT_PRE_QUERY = 'swtrig_pre==1 and nslice==1'
+# BDT_PRE_QUERY += ' and ' + reco_in_fv_query
+# BDT_PRE_QUERY +=' and contained_fraction>0.9'
+
+# # signal definition - shower constraints
+# BDT_PRE_QUERY += ' and n_showers_contained==1'
+
+# # signal definition - track constraints
+# BDT_PRE_QUERY += ' and n_tracks_contained>0'
+# BDT_PRE_QUERY += ' and trk_energy>0.04' 
+    
+# BDT_LOOSE_CUTS = BDT_PRE_QUERY
+
+# # loose shower constraints
+# BDT_LOOSE_CUTS +=' and shr_score<0.3'
+# BDT_LOOSE_CUTS += ' and shrmoliereavg<15'
+# BDT_LOOSE_CUTS += ' and shr_tkfit_dedx_Y<7'
+
+# # loose track constraints
+# BDT_LOOSE_CUTS += ' and trkpid<0.35'
+# BDT_LOOSE_CUTS += ' and tksh_distance<12'
+
 # quality cuts
-BDT_PRE_QUERY = 'swtrig_pre==1 and nslice==1'
+BDT_PRE_QUERY = 'swtrig_pre == 1'
+BDT_PRE_QUERY += ' and slice_orig_pass_id == 1' 
 BDT_PRE_QUERY += ' and ' + reco_in_fv_query
-BDT_PRE_QUERY +=' and contained_fraction>0.9'
+BDT_PRE_QUERY +=' and contained_fraction > 0.9'
 
 # signal definition - shower constraints
-BDT_PRE_QUERY += ' and n_showers_contained==1'
+BDT_PRE_QUERY += ' and n_showers_contained == 1'
+
+# signal definition - michel electron phase space constraint
+BDT_PRE_QUERY += ' and shr_energy_tot_cali > 0.07'
 
 # signal definition - track constraints
-BDT_PRE_QUERY += ' and n_tracks_contained>0'
-BDT_PRE_QUERY += ' and trk_energy>0.04' 
-    
+BDT_PRE_QUERY += ' and n_tracks_contained > 0'
+BDT_PRE_QUERY += ' and trk_energy > 0.04'
+
 BDT_LOOSE_CUTS = BDT_PRE_QUERY
 
 # loose shower constraints
-BDT_LOOSE_CUTS +=' and shr_score<0.3'
-BDT_LOOSE_CUTS += ' and shrmoliereavg<15'
-BDT_LOOSE_CUTS += ' and shr_tkfit_dedx_Y<7'
+BDT_LOOSE_CUTS += ' and shrmoliereavg < 15'
 
-# loose track constraints
-BDT_LOOSE_CUTS += ' and trkpid<0.35'
-BDT_LOOSE_CUTS += ' and tksh_distance<12'
+# loose track constraints (including NuGraph variables)
+BDT_LOOSE_CUTS += ' and trkpid < 0.35'
+BDT_LOOSE_CUTS += ' and tksh_distance < 12'
 
 ######################### analysis parameters ##############################
 # set the POT & plots_path for plotting
@@ -77,6 +109,7 @@ def parameters(ISRUN3):
         plots_path = "/Users/abarnard/phd/ccnp/uBNuMI_CC1eNp/plots/fhc/"
         cv_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run1/slimmed/" 
         full_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run1/unslimmed/"
+        run4b_path = "/pnfs/uboone/persistent/users/uboonepro/surprise/run4b_full_samples/wc_processed/NuMI/"
         
         dirt_tune = 0.65 # validated
         
@@ -101,12 +134,14 @@ def parameters(ISRUN3):
         plots_path = "/Users/abarnard/phd/ccnp/uBNuMI_CC1eNp/plots/rhc/"
         cv_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run3b/slimmed/"
         full_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run3b/unslimmed/"
+        run4b_path = "/pnfs/uboone/persistent/users/uboonepro/surprise/run4b_full_samples/wc_processed/NuMI/"
         
         dirt_tune = 0.45 # validated
         
-        beamon_pot = 5.014E20
+        beamon_pot = 5.013E20
+        # beamon_pot = 2.527e+20
         
-        NUE = 'numi_nue_run3'
+        NUE = 'checkout_MCC9.10_Run4b_NuMI_RHC_nue_overlay_surprise_v10_04_07_09_reco2_hist'
 
         # OLD INTEGRATED FLUX
         #integrated_flux_per_pot =  8.6283762e-12 #3.2774914e-12 # [ nu / cm^2 / POT]  , includes 60 MeV neutrino energy threshold
@@ -114,10 +149,9 @@ def parameters(ISRUN3):
         # New integrated flux!
         integrated_flux_per_pot =  9.02463e-12 #3.2774914e-12 # [ nu / cm^2 / POT]  , includes 60 MeV neutrino energy threshold
         
-        bdt_model = 'BDT_models/bdt_RHC_may2022_subset.model'
-        # bdt_model = 'BDT_models/test_rhc_sept24.model' # MY TEST MODEL FOR DL VERTEXING + SHOWER!
+        bdt_model = 'BDT_models/test_run4brhc_scaled_noext_noshrscore.model'
 
-        bdt_score_cut = 0.575 
+        bdt_score_cut = 0.55 
         
         detsys = 0.129 #0.133
         
@@ -126,6 +160,7 @@ def parameters(ISRUN3):
         "plots_path" : plots_path, 
         "cv_ntuple_path" : cv_ntuple_path, 
         "full_ntuple_path" : full_ntuple_path, 
+        "run4b_path" : run4b_path,
         "dirt_tune" : dirt_tune, 
         "ext_tune" : ext_tune, 
         "beamon_pot" : beamon_pot, 
@@ -143,52 +178,32 @@ def parameters(ISRUN3):
 ######################### plot categories ##############################
 # everything must pass software trigger ! 
 
-in_fv_query = "10<=true_nu_vtx_x<=246 and -106<=true_nu_vtx_y<=106 and 10<=true_nu_vtx_z<=1026"
-out_fv_query = "((true_nu_vtx_x<10 or true_nu_vtx_x>246) or (true_nu_vtx_y<-106 or true_nu_vtx_y>106) or (true_nu_vtx_z<10 or true_nu_vtx_z>1026))"
+in_fv_query = "10<=pandora_true_nu_vtx_x<=246 and -106<=pandora_true_nu_vtx_y<=106 and 10<=pandora_true_nu_vtx_z<=1026"
+out_fv_query = "((pandora_true_nu_vtx_x<10 or pandora_true_nu_vtx_x>246) or (pandora_true_nu_vtx_y<-106 or pandora_true_nu_vtx_y>106) or (pandora_true_nu_vtx_z<10 or pandora_true_nu_vtx_z>1026))"
 
-# numu_CC_Npi0 = 'swtrig_pre==1 and ((nu_pdg==14 or nu_pdg==-14) and ccnc==0 and npi0>=1)'
-# numu_CC_0pi0 = 'swtrig_pre==1 and ((nu_pdg==14 or nu_pdg==-14) and ccnc==0 and npi0==0)'
+numu_CC_Npi0 = '((pandora_nu_pdg==14 or pandora_nu_pdg==-14) and pandora_ccnc==0 and pandora_npi0>=1)'
+numu_CC_0pi0 = '((pandora_nu_pdg==14 or pandora_nu_pdg==-14) and pandora_ccnc==0 and pandora_npi0==0)'
 
-# numu_NC_Npi0 = 'swtrig_pre==1 and ((nu_pdg==14 or nu_pdg==-14) and ccnc==1 and npi0>=1)'
-# numu_NC_0pi0 = 'swtrig_pre==1 and ((nu_pdg==14 or nu_pdg==-14) and ccnc==1 and npi0==0)'
+numu_NC_Npi0 = '((pandora_nu_pdg==14 or pandora_nu_pdg==-14) and pandora_ccnc==1 and pandora_npi0>=1)'
+numu_NC_0pi0 = '((pandora_nu_pdg==14 or pandora_nu_pdg==-14) and pandora_ccnc==1 and pandora_npi0==0)'
 
-# nuebar_1eNp = 'swtrig_pre==1 and ((nu_pdg==-12 and ccnc==0 and nproton>0 and npion==0 and npi0==0))'
-# nue_NC = 'swtrig_pre==1 and ((nu_pdg==12 or nu_pdg==-12) and ccnc==1)'
+nuebar_1eNp = '((pandora_nu_pdg==-12 and pandora_ccnc==0 and pandora_nproton>0 and pandora_npion==0 and pandora_npi0==0))'
+nue_NC = '((pandora_nu_pdg==12 or pandora_nu_pdg==-12) and pandora_ccnc==1)'
 
-# nue_CCother = 'swtrig_pre==1 and (((nu_pdg==12 and ccnc==0) and (nproton==0 or npi0>0 or npion>0)) or (nu_pdg==-12 and ccnc==0 and (nproton==0 or npion>0 or npi0>0)))'
-
-# # less specific categories 
-# nue_other = 'swtrig_pre==1 and (((nu_pdg==12 or nu_pdg==-12) and ccnc==1) or (( (nu_pdg==12 or nu_pdg==-12) and ccnc==0) and (nproton==0 or npi0>0 or npion>0)))'
-# numu_Npi0 = 'swtrig_pre==1 and ( (nu_pdg==14 or nu_pdg==-14) and npi0>=1)'
-# numu_0pi0 = 'swtrig_pre==1 and ( (nu_pdg==14 or nu_pdg==-14) and npi0==0)'
-
-# # signal vs. not signal 
-# signal = in_fv_query+' and  swtrig_pre==1 and (nu_pdg==12 and ccnc==0 and nproton>0 and npion==0 and npi0==0)'
-# not_signal = "(swtrig_pre==0) or (swtrig_pre==1 and (" + out_fv_query+' or (nu_pdg!=12) or (nu_pdg==12 and ccnc==1) or (nu_pdg==12 and ccnc==0 and (nproton==0 or npi0>0 or npion>0))))'
-
-numu_CC_Npi0 = '((nu_pdg==14 or nu_pdg==-14) and ccnc==0 and npi0>=1)'
-numu_CC_0pi0 = '((nu_pdg==14 or nu_pdg==-14) and ccnc==0 and npi0==0)'
-
-numu_NC_Npi0 = '((nu_pdg==14 or nu_pdg==-14) and ccnc==1 and npi0>=1)'
-numu_NC_0pi0 = '((nu_pdg==14 or nu_pdg==-14) and ccnc==1 and npi0==0)'
-
-nuebar_1eNp = '((nu_pdg==-12 and ccnc==0 and nproton>0 and npion==0 and npi0==0))'
-nue_NC = '((nu_pdg==12 or nu_pdg==-12) and ccnc==1)'
-
-nue_CCother = '(((nu_pdg==12 and ccnc==0) and (nproton==0 or npi0>0 or npion>0)) or (nu_pdg==-12 and ccnc==0 and (nproton==0 or npion>0 or npi0>0)))'
+nue_CCother = '(((pandora_nu_pdg==12 and pandora_ccnc==0) and (pandora_nproton==0 or pandora_npi0>0 or pandora_npion>0)) or (pandora_nu_pdg==-12 and pandora_ccnc==0 and (pandora_nproton==0 or pandora_npion>0 or pandora_npi0>0)))'
 
 # less specific categories 
-nue_other = '(((nu_pdg==12 or nu_pdg==-12) and ccnc==1) or (( (nu_pdg==12 or nu_pdg==-12) and ccnc==0) and (nproton==0 or npi0>0 or npion>0)))'
-numu_Npi0 = '( (nu_pdg==14 or nu_pdg==-14) and npi0>=1)'
-numu_0pi0 = '( (nu_pdg==14 or nu_pdg==-14) and npi0==0)'
+nue_other = '(((pandora_nu_pdg==12 or pandora_nu_pdg==-12) and pandora_ccnc==1) or (( (pandora_nu_pdg==12 or pandora_nu_pdg==-12) and pandora_ccnc==0) and (pandora_nproton==0 or pandora_npi0>0 or pandora_npion>0)))'
+numu_Npi0 = '( (pandora_nu_pdg==14 or pandora_nu_pdg==-14) and pandora_npi0>=1)'
+numu_0pi0 = '( (pandora_nu_pdg==14 or pandora_nu_pdg==-14) and pandora_npi0==0)'
 
 # signal vs. not signal 
-signal = in_fv_query + ' and (nu_pdg == 12 and ccnc == 0 and nproton > 0 and npion == 0 and npi0 == 0)'
-not_signal = '(' + out_fv_query + ' or (nu_pdg != 12) or (nu_pdg == 12 and ccnc == 1) or (nu_pdg == 12 and ccnc == 0 and (nproton == 0 or npi0 > 0 or npion > 0)))'
+signal = in_fv_query + ' and (pandora_nu_pdg == 12 and pandora_ccnc == 0 and pandora_nproton > 0 and pandora_npion == 0 and pandora_npi0 == 0 and pandora_elec_e > 0.07)'
+not_signal = '(' + out_fv_query + ' or (pandora_nu_pdg != 12) or (pandora_nu_pdg == 12 and pandora_ccnc == 1) or (pandora_nu_pdg == 12 and pandora_ccnc == 0 and (pandora_nproton == 0 or pandora_npi0 > 0 or pandora_npion > 0 or pandora_elec_e <= 0.07)))'
 
 # for replacing nue CC 
-in_AV_query = "-1.55<=true_nu_vtx_x<=254.8 and -116.5<=true_nu_vtx_y<=116.5 and 0<=true_nu_vtx_z<=1036.8"
-nueCC_query = 'abs(nu_pdg)==12 and ccnc==0 and '+in_AV_query
+in_AV_query = "-1.55<=pandora_true_nu_vtx_x<=254.8 and -116.5<=pandora_true_nu_vtx_y<=116.5 and 0<=pandora_true_nu_vtx_z<=1036.8"
+nueCC_query = 'abs(pandora_nu_pdg)==12 and pandora_ccnc==0 and '+in_AV_query
 
 ########################################################################
 #################### labels ############################################
@@ -262,17 +277,13 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
     
     if ISRUN3: 
 
-        overlay_pot = 2.1844E21  # Run 4
+        overlay_pot = 2.33807e+21  # Run 4b
         # dirt_pot = 1.67392E21 # david's file
         beamon_pot = 5.013E20 # Normalizing to 1E20 POT for comparison
-        nue_intrinsic_pot = 3.93021E22
+        nue_intrinsic_pot = 5.04447e+22 # Run 4b
 
         beamon_ntrig =  10349610.0 # Triggers of Run 3 data (from Patrick) (think this is an average)
-        beamoff_ntrig = 15764736.750000  # Triggers of Run 4 beam off 
-        # beamoff_ntrig = 17061650.550000 # Run 4 beam off triggers (non-WC processed)
-
-        df_before = df.query('run<16880').copy()
-        df_after = df.query('run>=16880').copy()
+        beamoff_ntrig = 15770854.05  # Triggers of Run 4b beam off 
 
         df_new = df.copy()
         
@@ -288,11 +299,29 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
         elif df_type == "ext": 
             df_new['pot_scale'] = (beamon_ntrig/beamoff_ntrig)*ext_tune
 
-        # elif df_type == "ext": 
-        #     df_before['pot_scale'] = (8526417.0/beamoff_ntrig)*ext_tune
-        #     df_after['pot_scale'] = (1846526.0/beamoff_ntrig)*ext_tune
+        ### UNSCALED VERSION
 
-        #     df_new = pd.concat([df_before, df_after], ignore_index=True, sort=True) 
+        # overlay_pot = 2.33807e+21
+        # # dirt_pot = 1
+        # beamon_pot = 2.527e+20
+        # nue_intrinsic_pot = 5.04447e+22
+
+        # beamon_ntrig = 5418188.0
+        # beamoff_ntrig = 15770854.05
+
+        # df_new = df.copy()
+        
+        # if df_type == 'overlay': 
+        #     df_new['pot_scale'] = beamon_pot/overlay_pot
+
+        # elif df_type == 'intrinsic': 
+        #     df_new['pot_scale'] = beamon_pot/nue_intrinsic_pot
+
+        # # elif df_type == 'dirt': 
+        # #     df_new['pot_scale'] = (beamon_pot/dirt_pot)*dirt_tune
+
+        # elif df_type == "ext": 
+        #     df_new['pot_scale'] = (beamon_ntrig/beamoff_ntrig)*ext_tune
     
     
     else: 
@@ -433,23 +462,41 @@ intrinsic_detvar_run3_rhc = {
 # corrected visible energy variable - account for electrons below 30 MeV 
 def visible_energy_nothres(df): 
     
-    df['elec_ke'] = df.elec_e - 0.000511
-    elec_ke = list(df['elec_ke'])
+    # Handle both prefixed and unprefixed column names
+    if 'pandora_elec_e' in df.columns:
+        # Combined DataFrame with prefixes
+        elec_e_col = 'pandora_elec_e'
+        true_e_vis_col = 'pandora_true_e_visible'
+        elec_ke_col = 'pandora_elec_ke'
+    elif 'elec_e' in df.columns:
+        # Original DataFrame without prefixes  
+        elec_e_col = 'elec_e'
+        true_e_vis_col = 'true_e_visible'
+        elec_ke_col = 'elec_ke'
+    else:
+        raise KeyError("Could not find electron energy column. Expected 'pandora_elec_e' or 'elec_e'")
+    
+    df[elec_ke_col] = df[elec_e_col] - 0.000511
+    pandora_elec_ke = list(df[elec_ke_col])
 
-    E_vis = np.array(df.true_e_visible)
-    E_vis_new = [0 for i in range(len(E_vis))]
+    pandora_E_vis = np.array(df[true_e_vis_col])
+    pandora_E_vis_new = [0 for i in range(len(pandora_E_vis))]
 
-    for i in range(len(E_vis)): 
+    for i in range(len(pandora_E_vis)): 
     
         # for electrons above the 30 MeV threshold - do nothing 
-        if elec_ke[i] > 0.03 or elec_ke[i] < 0: 
-            E_vis_new[i] = E_vis[i]
+        if pandora_elec_ke[i] > 0.03 or pandora_elec_ke[i] < 0: 
+            pandora_E_vis_new[i] = pandora_E_vis[i]
 
         # for electrons below the 30 MeV threshold - add to the total visible energy 
-        elif 0<elec_ke[i]<=0.03: 
-            E_vis_new[i] = E_vis[i] + elec_ke[i] 
+        elif 0<pandora_elec_ke[i]<=0.03: 
+            pandora_E_vis_new[i] = pandora_E_vis[i] + pandora_elec_ke[i] 
 
-    df['true_e_visible2'] = E_vis_new
+    # Use appropriate column name for the output
+    if 'pandora_elec_e' in df.columns:
+        df['pandora_true_e_visible2'] = pandora_E_vis_new
+    else:
+        df['true_e_visible2'] = pandora_E_vis_new
     
 ########################################################################
 def flugg_reweight(df, isrun3): 
@@ -579,8 +626,7 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
                 "true_nu_vtx_x", "true_nu_vtx_y", "true_nu_vtx_z", "ppfx_cv", "weightSplineTimesTune", "weightTune",
                 "nslice", 
                  "elec_e", "shr_energy_cali", 
-                 "NeutrinoEnergy2", "true_e_visible", 
-                 "opening_angle", "tksh_angle", "nu_e", "true_nu_px", "true_nu_py", "true_nu_pz"] 
+                 "NeutrinoEnergy2", "true_e_visible", "tksh_angle", "nu_e", "true_nu_px", "true_nu_py", "true_nu_pz"] # "opening_angle", 
     
     
     if var not in variables: 
@@ -597,8 +643,8 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
 
     
     # This needs to be full_ntuple_path!
-    f = uproot.open(parameters(ISRUN3)['full_ntuple_path']+parameters(ISRUN3)['NUE']+".root")[fold][tree]
-    df = f.pandas.df(variables, flatten=False)
+    f = uproot.open(parameters(ISRUN3)['run4b_path']+parameters(ISRUN3)['NUE']+".root")[fold][tree]
+    df = pd.DataFrame(f.arrays(variables, library="np"))
 
     # Added in the ppfx_cv cleaning here 
     df.loc[ df['ppfx_cv'] <= 0, 'ppfx_cv' ] = 1.
@@ -615,20 +661,14 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
     df.loc[ df['weightTune'] == np.inf, 'weightTune' ] = 1.
     df.loc[ df['weightTune'] > 30, 'weightTune' ] = 1.
     df.loc[ np.isnan(df['weightTune']) == True, 'weightTune' ] = 1.
-    
-    # df['is_signal'] = np.where((df.swtrig_pre == 1)
-    #                          & (df.nu_pdg==12) & (df.ccnc==0) & (df.nproton>0) & (df.npion==0) & (df.npi0==0)
-    #                          & (10 <= df.true_nu_vtx_x) & (df.true_nu_vtx_x <= 246)
-    #                          & (-106 <= df.true_nu_vtx_y) & (df.true_nu_vtx_y <= 106)
-    #                          & (10 <= df.true_nu_vtx_z) & (df.true_nu_vtx_z <= 1026), 
-    #                            True, False)
 
     df['is_signal'] = np.where((df.nu_pdg==12) & (df.ccnc==0) & (df.nproton>0) & (df.npion==0) & (df.npi0==0)
                              & (10 <= df.true_nu_vtx_x) & (df.true_nu_vtx_x <= 246)
                              & (-106 <= df.true_nu_vtx_y) & (df.true_nu_vtx_y <= 106)
-                             & (10 <= df.true_nu_vtx_z) & (df.true_nu_vtx_z <= 1026), 
-                               True, False)
+                             & (10 <= df.true_nu_vtx_z) & (df.true_nu_vtx_z <= 1026)
+                             & (df.elec_e>0.07), True, False) # Set the Michel electron phase space veto here
     
+    # Defining the reconstructed neutrino energy in GeV (Pandora)
     df['NeutrinoEnergy2_GeV'] = df['NeutrinoEnergy2']/1000
 
     visible_energy_nothres(df)
@@ -647,7 +687,8 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
     #df_signal['weightTune'] = [1 for x in range(len(df_signal))]
 
     df_signal['totweight_data'] = df_signal['ppfx_cv']*df_signal['pot_scale']*df_signal['weightSplineTimesTune']
-    df_signal['totweight_intrinsic'] = df_signal['ppfx_cv']*df_signal['weightSplineTimesTune']
+    df_signal['totweight_intrinsic'] = df_signal['ppfx_cv']*df_signal['weightSplineTimesTune'
+    ]
     
     if isFlugg:
         df_signal['totweight_data_flugg'] = df_signal['ppfx_cv']*df_signal['pot_scale']*df_signal['weightSplineTimesTune']*df_signal['flugg_reweight']
@@ -699,72 +740,20 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
                 bin_query = var+'>='+str(bins[i])+' and '+var+'<'+str(bins[i+1])
 
             generated_sumw2.append( sum(df_signal.query(bin_query).totweight_data ** 2) )
-
-
     
+    elif weight=='totweight_intrinsic': 
+        
+        for i in range(len(bins)-1): 
+            
+            if i==len(bins)-2: 
+                bin_query = var+'>='+str(bins[i])+' and '+var+'<='+str(bins[i+1])
+            else: 
+                bin_query = var+'>='+str(bins[i])+' and '+var+'<'+str(bins[i+1])
+
+            generated_sumw2.append( sum(df_signal.query(bin_query).totweight_intrinsic ** 2) )
+
     return n.tolist(), df_weights, generated_sumw2
     
-########################################################################
-# parameters for the xsec variables 
-# Outdated
-def xsec_variables(xvar, ISRUN3): 
-    
-    print("Need to update before using these! ")
-    
-    if not ISRUN3: 
-        data_pot = "$2.0\\times10^{20}$ POT"
-    else: 
-        print('No parameters for RHC! ') 
-
-    if xvar == 'tksh_angle': 
-        bins = [-1, -0.6, -0.2, 0.2, 0.6, 1]
-        fine_bins = [-1, -0.9, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 0.9, 1]
-        true_var = 'opening_angle'
-        x_label = "cos $\\theta_{ep}$"
-
-        xlow = -1
-        xhigh = 1
-        
-    elif xvar=='shr_energy_cali': 
-        bins = [0.09, 0.4, 0.65, 1, 3]
-        fine_bins = [0.09, .2, .3, .4, .5, .65, .75, .85, 1.0, 1.5, 2, 2.5, 3]
-        true_var = "elec_e"
-        x_label = "Electron Energy [GeV]" 
-        xlow = 0.09
-        xhigh = 3
-        
-    elif xvar=='NeutrinoEnergy2_GeV': 
-        bins = [0.19, .4, .65, .85, 1.15, 1.5, 4]
-        fine_bins = [.19, .5, .75, 1, 1.5, 2, 2.5, 3, 3.5, 4]
-        true_var = 'true_e_visible'
-        x_label = "Total Visible Energy [GeV]" 
-        xlow = 0
-        xhigh = 4
-        
-    elif xvar=='nproton': 
-        bins = [1, 2, 3, 7]
-        fine_bins = [1, 2, 3, 4, 5, 6, 7]
-        true_var = "nproton"
-        x_label = "Proton Multiplicity"
-        xlow = 1
-        xhigh = 7
-    
-
-    else: 
-        print('No parameters for this variable! ')
-
-    d = {
-        'bins': bins, 
-        'fine_bins': fine_bins, 
-        'true_var': true_var, 
-        'x_label': x_label, 
-        'beamon_pot': data_pot, 
-        'xlow': xlow,
-        'xhigh': xhigh
-    }
-    
-    return d
-
 ########################################################################
 # add angles in beam & detector coordinates
 def addAngles(df): 
@@ -778,17 +767,17 @@ def addAngles(df):
     det_origin_beamcoor = [5502.0, 7259.0,  67270.0]
      
     # angles in detector coordinates
-    df['thdet'] = np.arctan2(((df['true_nu_px']*df['true_nu_px'])+(df['true_nu_py']*df['true_nu_py']))**(1/2), df['true_nu_pz'])*(180/math.pi)
-    df['phidet'] = np.arctan2(df['true_nu_py'], df['true_nu_px'])*(180/math.pi)
+    df['pandora_thdet'] = np.arctan2(((df['pandora_true_nu_px']*df['pandora_true_nu_px'])+(df['pandora_true_nu_py']*df['pandora_true_nu_py']))**(1/2), df['pandora_true_nu_pz'])*(180/math.pi)
+    df['pandora_phidet'] = np.arctan2(df['pandora_true_nu_py'], df['pandora_true_nu_px'])*(180/math.pi)
         
     # get true momentum in beam coordinates
-    df['true_nu_px_beam'] = R[0][0]*df['true_nu_px'] + R[0][1]*df['true_nu_py'] + R[0][2]*df['true_nu_pz']
-    df['true_nu_py_beam'] = R[1][0]*df['true_nu_px'] + R[1][1]*df['true_nu_py'] + R[1][2]*df['true_nu_pz']
-    df['true_nu_pz_beam'] = R[2][0]*df['true_nu_px'] + R[2][1]*df['true_nu_py'] + R[2][2]*df['true_nu_pz']
+    df['pandora_true_nu_px_beam'] = R[0][0]*df['pandora_true_nu_px'] + R[0][1]*df['pandora_true_nu_py'] + R[0][2]*df['pandora_true_nu_pz']
+    df['pandora_true_nu_py_beam'] = R[1][0]*df['pandora_true_nu_px'] + R[1][1]*df['pandora_true_nu_py'] + R[1][2]*df['pandora_true_nu_pz']
+    df['pandora_true_nu_pz_beam'] = R[2][0]*df['pandora_true_nu_px'] + R[2][1]*df['pandora_true_nu_py'] + R[2][2]*df['pandora_true_nu_pz']
     
     # angles in beam coordinates
-    df['thbeam'] = np.arctan2(((df['true_nu_px_beam']*df['true_nu_px_beam'])+(df['true_nu_py_beam']*df['true_nu_py_beam']))**(1/2), df['true_nu_pz_beam'])*(180/math.pi)
-    df['phibeam'] = np.arctan2(df['true_nu_py_beam'], df['true_nu_px_beam'])*(180/math.pi)
+    df['pandora_thbeam'] = np.arctan2(((df['pandora_true_nu_px_beam']*df['pandora_true_nu_px_beam'])+(df['pandora_true_nu_py_beam']*df['pandora_true_nu_py_beam']))**(1/2), df['pandora_true_nu_pz_beam'])*(180/math.pi)
+    df['pandora_phibeam'] = np.arctan2(df['pandora_true_nu_py_beam'], df['pandora_true_nu_px_beam'])*(180/math.pi)
         
     return df
 

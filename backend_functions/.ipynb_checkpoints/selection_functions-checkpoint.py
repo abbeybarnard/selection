@@ -108,17 +108,17 @@ def addAngles(df):
     det_origin_beamcoor = [5502.0, 7259.0,  67270.0]
      
     # angles in detector coordinates
-    df['thdet'] = np.arctan2(((df['true_nu_px']*df['true_nu_px'])+(df['true_nu_py']*df['true_nu_py']))**(1/2), df['true_nu_pz'])*(180/math.pi)
-    df['phidet'] = np.arctan2(df['true_nu_py'], df['true_nu_px'])*(180/math.pi)
+    df['pandora_thdet'] = np.arctan2(((df['pandora_true_nu_px']*df['pandora_true_nu_px'])+(df['pandora_true_nu_py']*df['pandora_true_nu_py']))**(1/2), df['pandora_true_nu_pz'])*(180/math.pi)
+    df['pandora_phidet'] = np.arctan2(df['pandora_true_nu_py'], df['pandora_true_nu_px'])*(180/math.pi)
         
     # get true momentum in beam coordinates
-    df['true_nu_px_beam'] = R[0][0]*df['true_nu_px'] + R[0][1]*df['true_nu_py'] + R[0][2]*df['true_nu_pz']
-    df['true_nu_py_beam'] = R[1][0]*df['true_nu_px'] + R[1][1]*df['true_nu_py'] + R[1][2]*df['true_nu_pz']
-    df['true_nu_pz_beam'] = R[2][0]*df['true_nu_px'] + R[2][1]*df['true_nu_py'] + R[2][2]*df['true_nu_pz']
+    df['pandora_true_nu_px_beam'] = R[0][0]*df['pandora_true_nu_px'] + R[0][1]*df['pandora_true_nu_py'] + R[0][2]*df['pandora_true_nu_pz']
+    df['pandora_true_nu_py_beam'] = R[1][0]*df['pandora_true_nu_px'] + R[1][1]*df['pandora_true_nu_py'] + R[1][2]*df['pandora_true_nu_pz']
+    df['pandora_true_nu_pz_beam'] = R[2][0]*df['pandora_true_nu_px'] + R[2][1]*df['pandora_true_nu_py'] + R[2][2]*df['pandora_true_nu_pz']
     
     # angles in beam coordinates
-    df['thbeam'] = np.arctan2(((df['true_nu_px_beam']*df['true_nu_px_beam'])+(df['true_nu_py_beam']*df['true_nu_py_beam']))**(1/2), df['true_nu_pz_beam'])*(180/math.pi)
-    df['phibeam'] = np.arctan2(df['true_nu_py_beam'], df['true_nu_px_beam'])*(180/math.pi)
+    df['pandora_thbeam'] = np.arctan2(((df['pandora_true_nu_px_beam']*df['pandora_true_nu_px_beam'])+(df['pandora_true_nu_py_beam']*df['pandora_true_nu_py_beam']))**(1/2), df['pandora_true_nu_pz_beam'])*(180/math.pi)
+    df['pandora_phibeam'] = np.arctan2(df['pandora_true_nu_py_beam'], df['pandora_true_nu_px_beam'])*(180/math.pi)
         
     return df
 ########################################################################
