@@ -27,7 +27,7 @@ reco_in_fv_query = "10<=wc3_reco_nuvtxX<=246 and -106<=wc3_reco_nuvtxY<=106 and 
 ### BDT TRAINING VARIABLES ###
 # Need to be called by their pandora_ prefix in the dataframe
 training_parameters = [
-        "pandora_shr_tkfit_dedx_Y", "pandora_shr_tkfit_gap10_dedx_Y", "pandora_shr_tkfit_2cm_dedx_Y",
+        "pandora_shr_tkfit_dedx_Y", "pandora_shr_tkfit_gap10_dedx_Y", "pandora_shr_tkfit_2cm_dedx_Y", "pandora_trkpid",
         "pandora_pfng2hipfrac", "pandora_pfng2hipavrg", "pandora_ng2hip_r1cm", "pandora_ng2hip_r10cm",
         "pandora_pfng2shrfrac", "pandora_pfng2shravrg", "pandora_shrmoliereavg", "pandora_subcluster",
         "pandora_tksh_distance", "pandora_trkshrhitdist2"]
