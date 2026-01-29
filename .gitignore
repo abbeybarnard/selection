@@ -12,6 +12,11 @@ __pycache__/
 *.svg
 plots/
 
+# other stuff
+*.pkl
+*.csv
+
 # models & data (if you choose to ignore)
 BDT_models/
 BDT_training_data/
+

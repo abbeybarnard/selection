@@ -1573,6 +1573,16 @@ def bdt_metrics(train, test, train_query, test_query, training_parameters, isrun
     #    plt.legend(loc='upper right', prop={"size":13})
     #    plt.xlabel('# of rounds')
     #    plt.show()
+
+    # Create metrics_df from progress
+    import pandas as pd
+    metrics_df = pd.DataFrame({
+        'train-auc': progress['train']['auc'],
+        'test-auc': progress['valid']['auc'],
+        'train-aucpr': progress['train']['aucpr'],
+        'test-aucpr': progress['valid']['aucpr'],
+    })
+    return metrics_df
         
 ########################################################################
 # BDT Purity/Efficiency 
