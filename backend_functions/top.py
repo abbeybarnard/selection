@@ -104,13 +104,13 @@ def parameters(ISRUN3):
         plots_path = "/Users/abarnard/phd/ccnp/uBNuMI_CC1eNp/plots/fhc/"
         cv_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run1/slimmed/" 
         full_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run1/unslimmed/"
-        run4b_path = "/pnfs/uboone/persistent/users/uboonepro/surprise/run4b_full_samples/wc_processed/NuMI/"
+        run4c_path = "/pnfs/uboone/persistent/users/uboonepro/surprise/run4c_full_samples/wc_processed/NuMI/"
         
         dirt_tune = 0.65 # validated
         
         beamon_pot = 2.0E20 # v5
 
-        NUE = 'numi_nue_run1'
+        NUE = 'checkout_MCC9.10_Run4c4d5_NuMI_FHC_intrinsic_nue_overlay_surprise_reco2_hist_4c'
         
         # OLD INTEGRATED FLUX
         # integrated_flux_per_pot = 1.1864531e-11 # 1.18069E-11 # [ nu / cm^2 / POT]  , includes 60 MeV neutrino energy threshold
@@ -273,8 +273,8 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
     if ISRUN3: 
 
         overlay_pot = 2.33807e+21  # Run 4b
-        # dirt_pot = 1.67392E21 # david's file
-        beamon_pot = 5.013E20 # Normalizing to 1E20 POT for comparison
+        dirt_pot = 1.67392E21 # Run 4b
+        beamon_pot = 5.013E20 # Normalising to Run 3
         nue_intrinsic_pot = 5.04447e+22 # Run 4b
 
         beamon_ntrig =  10349610.0 # Triggers of Run 3 data (from Patrick) (think this is an average)
@@ -321,14 +321,14 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
     
     else: 
         
-        overlay_pot =  2.33652E21  
-        dirt_pot = 1.67392E21 # david's file
-        beamon_pot = 2.0E20 #v5
+        overlay_pot =  2.33652E21 # Run 4c FHC
+        dirt_pot = 1.67392E21 #Run 4c FHC
+        beamon_pot = 2.0E20 # Run 1 FHC
 
-        beamon_ntrig =  5268051.0 # v5 (EA9CNT_wcut)
-        beamoff_ntrig = 9199232.74  # v5 (EXT_NUMIwin_FEMBeamTriggerAlgo)
+        beamon_ntrig =  5268051.0 # Run 1 FHC
+        beamoff_ntrig = 9199232.74  # Run 4c FHC
 
-        nue_intrinsic_pot = 2.37838E22
+        nue_intrinsic_pot = 2.37838E22 # Run 4c FHC
         
         df_new = df.copy()
         
