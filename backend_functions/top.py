@@ -123,8 +123,8 @@ def parameters(ISRUN3):
         # NEW VALUE
         integrated_flux_per_pot = 1.22343e-11 # [ nu / cm^2 / POT]  , includes 60 MeV neutrino energy threshold
         
-        bdt_model = 'BDT_models/bdt_FHC_may2022_subset.model' 
-        bdt_score_cut = 0.55
+        bdt_model = 'BDT_models/bdt_run4c_run4d_run5_FHC_noext_290126.model' 
+        bdt_score_cut = 0.525
         
         detsys = 0.122
     
@@ -149,9 +149,9 @@ def parameters(ISRUN3):
         # New integrated flux!
         integrated_flux_per_pot =  9.02463e-12 #3.2774914e-12 # [ nu / cm^2 / POT]  , includes 60 MeV neutrino energy threshold
         
-        bdt_model = 'BDT_models/test_run4brhc_scaled_noext_noshrscore.model'
+        bdt_model = 'BDT_models/bdt_run4a_run4b_run4c_RHC_noext_290126.model'
 
-        bdt_score_cut = 0.55 
+        bdt_score_cut = 0.575 
         
         detsys = 0.129 #0.133
         
