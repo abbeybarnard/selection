@@ -265,7 +265,7 @@ def plot_mc(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overlay', sav
     
     ############################ PLOT ####################################### 
      
-    fig = plt.figure(figsize=(8, 5))
+    fig = plt.figure(figsize=(8, 6))
     n, b, p = plt.hist([ext[var], outfv[var], 
                        infv.query(numu_NC_Npi0)[var],
                        infv.query(numu_CC_Npi0)[var],
@@ -433,7 +433,7 @@ def plot_mc(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overlay', sav
         plt.text(xtext, ytext, text, fontsize='xx-large', horizontalalignment='right')
     
     if save: 
-        plt.savefig("BDTPlot_Run4bRHC_Comp.svg", transparent=False, bbox_inches='tight') 
+        plt.savefig("BDTPlot_Run4bRHC_Comp.pdf", transparent=False, bbox_inches='tight', dpi=300) 
         #plt.savefig(plots_path+var+"_"+save_label+".pdf", transparent=True, bbox_inches='tight') 
         print('saving to: '+plots_path)
         
