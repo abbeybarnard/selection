@@ -1368,30 +1368,28 @@ def addRelevantColumns_flexible(datasets, USE_EXT_IN_BDT=True):
 ########################################################################
 def prep_sets(train, test, train_query, test_query, varlist):
     
-    train_query = train.query(train_query)
-    test_query = test.query(test_query)
+    queried_train = train.query(train_query)
+    queried_test  = test.query(test_query)
     
-    # Last column will be signal definition for training ('is_signal')
-    X_train, y_train = train_query.iloc[:,:-1], train_query['is_signal']
-    
-    # Signal definition for testing will always be 'is_signal' or true signal definition
-    X_test, y_test = test_query.iloc[:,:-1], test_query['is_signal']
+    y_train = queried_train['is_signal']
+    y_test  = queried_test['is_signal']
 
-    # Cleaning dataframe
-    # Note that data for testing is also cleaned
+    # Replace large overflow values with NaN; XGBoost handles NaN natively
+    X_train = queried_train.copy()
+    X_test  = queried_test.copy()
     for column in varlist:
         X_train.loc[(X_train[column] < -1.0e37) | (X_train[column] > 1.0e37), column] = np.nan
         X_test.loc[(X_test[column] < -1.0e37) | (X_test[column] > 1.0e37), column] = np.nan
     
-    # Training and Testing DMatrices are only comprised of training variable list
+    # DMatrices use varlist explicitly — robust against column ordering in the DataFrame
     dtrain = xgb.DMatrix(data=X_train[varlist], label=y_train)
-    dtest = xgb.DMatrix(data=X_test[varlist], label=y_test)
+    dtest  = xgb.DMatrix(data=X_test[varlist],  label=y_test)
     
     d = {
         'X_train': X_train, 
-        'X_test': X_test, 
-        'dtrain': dtrain, 
-        'dtest' : dtest
+        'X_test':  X_test, 
+        'dtrain':  dtrain, 
+        'dtest':   dtest
     }
     
     return d
@@ -1482,30 +1480,37 @@ def main_BDT(datasets, train_query, test_query, rounds, training_parameters, isr
     return d
 ########################################################################    
 # BDT Metric evaluation
-def bdt_metrics(train, test, train_query, test_query, training_parameters, isrun3, save=False, verbose=False): 
+def bdt_metrics(train, test, train_query, test_query, training_parameters, isrun3, save=False, verbose=False, params=None): 
     
-    scale_weight = len(train.query(train_query+' and is_signal==True')) / len(train.query(train_query+' and is_signal==False'))
+    # background / signal (XGBoost convention: upweight the minority positive class)
+    scale_weight = len(train.query(train_query+' and is_signal==False')) / len(train.query(train_query+' and is_signal==True'))
     
-    #model params
-    params = {
-        'objective': 'binary:logistic',
-        'booster': 'gbtree',
-        'eta': 0.02,
-        'tree_method': 'exact',
-        'max_depth': 3,
-        'subsample': 0.8,
-        'colsample_bytree': 1,
-        'silent': 1,
-        'min_child_weight': 1,
-        'seed': 2002,
-        'gamma': 1,
-        'max_delta_step': 0,
-        'scale_pos_weight': scale_weight,
-        'eval_metric': ['error', 'auc', 'aucpr']
-    }
+    if params is not None:
+        # Use caller-supplied hyperparameters; always override scale_pos_weight from data
+        params = dict(params)
+        params['scale_pos_weight'] = scale_weight
+    else:
+        # Default model params
+        params = {
+            'objective': 'binary:logistic',
+            'booster': 'gbtree',
+            'eta': 0.02,
+            'tree_method': 'exact',
+            'max_depth': 3,
+            'subsample': 0.8,
+            'colsample_bytree': 1,
+            'verbosity': 0,
+            'min_child_weight': 1,
+            'seed': 2002,
+            'gamma': 1,
+            'max_delta_step': 0,
+            'scale_pos_weight': scale_weight,
+            'eval_metric': ['error', 'auc', 'aucpr']
+        }
     
-    dtrain = prep_sets(train, test, train_query, test_query, training_parameters)['dtrain']
-    dtest = prep_sets(train, test, train_query, test_query, training_parameters)['dtest']
+    d = prep_sets(train, test, train_query, test_query, training_parameters)
+    dtrain = d['dtrain']
+    dtest  = d['dtest']
 
     watchlist = [(dtrain, 'train'), (dtest, 'valid')]
 

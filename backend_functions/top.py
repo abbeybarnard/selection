@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 #### no pions above 40 MeV 
 #### within a FV defined by: 10<=true_nu_vtx_x<=246 and -106<=true_nu_vtx_y<=106 and 10<=true_nu_vtx_z<=1026'
 
-reco_in_fv_query = "10<=reco_nu_vtx_sce_x<=246 and -106<=reco_nu_vtx_sce_y<=106 and 10<=reco_nu_vtx_sce_z<=1026"
+reco_in_fv_query = "10<=reco_nu_vtx_sce_x<=246 and -101<=reco_nu_vtx_sce_y<=101 and 10<=reco_nu_vtx_sce_z<=986"
 
 ### BDT TRAINING VARIABLES ###
 training_parameters = [
@@ -108,7 +108,7 @@ def parameters(ISRUN3):
         
         dirt_tune = 0.65 # validated
         
-        beamon_pot = 2.0E20 # v5
+        beamon_pot = 8.9E20 # Total MicroBooNE FHC POT
 
         NUE = 'checkout_MCC9.10_Run4c4d5_NuMI_FHC_intrinsic_nue_overlay_surprise_reco2_hist_4c'
         
@@ -134,7 +134,7 @@ def parameters(ISRUN3):
         dirt_tune = 0.45 # validated
         
         # beamon_pot = 5.013E20
-        beamon_pot = 2.527e+20
+        beamon_pot = 11.1E20 # Total MicroBooNE RHC POT
         
         NUE = 'checkout_MCC9.10_Run4b_NuMI_RHC_nue_overlay_surprise_v10_04_07_09_reco2_hist'
 
