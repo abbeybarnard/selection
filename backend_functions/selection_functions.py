@@ -1437,13 +1437,14 @@ def main_BDT(datasets, train_query, test_query, rounds, training_parameters, isr
     # combine MC & EXT datasets with additional columns needed for BDT analysis
     df_pre = addRelevantColumns_flexible(datasets, USE_EXT_IN_BDT=USE_EXT_IN_BDT)
     
-    # compute the scale weight for model parameters 
-    scale_weight = len(df_pre.query(train_query + ' and is_signal == False')) / len(df_pre.query(train_query + ' and is_signal == True'))
-    print("scale pos weight (ratio of negative to positive) = "+str(scale_weight))
-    
     # Split arrays or matrices into random train and test subsets
     # stratify keeps the same signal/background ratio 
     df_pre_train, df_pre_test = train_test_split(df_pre, test_size=test_size, random_state=17, stratify=df_pre['is_signal'])
+
+    # compute the scale weight from the TRAINING set only (after split),
+    # since that is the data XGBoost actually trains on
+    scale_weight = len(df_pre_train.query(train_query + ' and is_signal == False')) / len(df_pre_train.query(train_query + ' and is_signal == True'))
+    print("scale pos weight (ratio of negative to positive) = "+str(scale_weight))
 
     varlist = training_parameters
     
