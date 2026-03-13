@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 # reco_in_fv_query = "10<=reco_nu_vtx_sce_x<=246 and -106<=reco_nu_vtx_sce_y<=106 and 10<=reco_nu_vtx_sce_z<=1026"
 
 # The WireCell reco_in_fv_query is defined here:
-reco_in_fv_query = "10<=wc3_reco_nuvtxX<=246 and -106<=wc3_reco_nuvtxY<=106 and 10<=wc3_reco_nuvtxZ<=1026"
+reco_in_fv_query = "10<=wc3_reco_nuvtxX<=246 and -101<=wc3_reco_nuvtxY<=101 and 10<=wc3_reco_nuvtxZ<=986"
 
 ### BDT TRAINING VARIABLES ###
 # Need to be called by their pandora_ prefix in the dataframe
@@ -83,7 +83,8 @@ BDT_LOOSE_CUTS = BDT_PRE_QUERY
 BDT_LOOSE_CUTS += ' and shrmoliereavg < 15'
 
 # loose track constraints (including NuGraph variables)
-BDT_LOOSE_CUTS += ' and trkpid < 0.35'
+# BDT_LOOSE_CUTS += ' and trkpid < 0.35'
+BDT_LOOSE_CUTS += ' and trksemlbl == 1'
 BDT_LOOSE_CUTS += ' and tksh_distance < 12'
 
 ######################### analysis parameters ##############################
@@ -113,6 +114,7 @@ def parameters(ISRUN3):
         
         dirt_tune = 0.65 # validated
         
+        # beamon_pot = 8.9E20 # Normalizing to full dataset FHC
         beamon_pot = 2.0E20 # v5
 
         NUE = 'numi_nue_run1'
@@ -138,6 +140,7 @@ def parameters(ISRUN3):
         
         dirt_tune = 0.45 # validated
         
+        # beamon_pot = 11.1E20 # Normalizing to full dataset RHC
         beamon_pot = 5.013E20
         # beamon_pot = 2.527e+20
         
@@ -178,8 +181,8 @@ def parameters(ISRUN3):
 ######################### plot categories ##############################
 # everything must pass software trigger ! 
 
-in_fv_query = "10<=pandora_true_nu_vtx_x<=246 and -106<=pandora_true_nu_vtx_y<=106 and 10<=pandora_true_nu_vtx_z<=1026"
-out_fv_query = "((pandora_true_nu_vtx_x<10 or pandora_true_nu_vtx_x>246) or (pandora_true_nu_vtx_y<-106 or pandora_true_nu_vtx_y>106) or (pandora_true_nu_vtx_z<10 or pandora_true_nu_vtx_z>1026))"
+in_fv_query = "10<=pandora_true_nu_vtx_x<=246 and -101<=pandora_true_nu_vtx_y<=101 and 10<=pandora_true_nu_vtx_z<=986"
+out_fv_query = "((pandora_true_nu_vtx_x<10 or pandora_true_nu_vtx_x>246) or (pandora_true_nu_vtx_y<-101 or pandora_true_nu_vtx_y>101) or (pandora_true_nu_vtx_z<10 or pandora_true_nu_vtx_z>986))"
 
 numu_CC_Npi0 = '((pandora_nu_pdg==14 or pandora_nu_pdg==-14) and pandora_ccnc==0 and pandora_npi0>=1)'
 numu_CC_0pi0 = '((pandora_nu_pdg==14 or pandora_nu_pdg==-14) and pandora_ccnc==0 and pandora_npi0==0)'
@@ -278,8 +281,8 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
     if ISRUN3: 
 
         overlay_pot = 2.33807e+21  # Run 4b
-        # dirt_pot = 1.67392E21 # david's file
-        beamon_pot = 5.013E20 # Normalizing to 1E20 POT for comparison
+        dirt_pot = 4.20894e+20 # Run 4b
+        beamon_pot = 5.013E20
         nue_intrinsic_pot = 5.04447e+22 # Run 4b
 
         beamon_ntrig =  10349610.0 # Triggers of Run 3 data (from Patrick) (think this is an average)
@@ -293,8 +296,8 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
         elif df_type == 'intrinsic': 
             df_new['pot_scale'] = beamon_pot/nue_intrinsic_pot
 
-        # elif df_type == 'dirt': 
-        #     df_new['pot_scale'] = (beamon_pot/dirt_pot)*dirt_tune
+        elif df_type == 'dirt': 
+            df_new['pot_scale'] = (beamon_pot/dirt_pot)*dirt_tune
 
         elif df_type == "ext": 
             df_new['pot_scale'] = (beamon_ntrig/beamoff_ntrig)*ext_tune
@@ -664,8 +667,8 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
 
     df['is_signal'] = np.where((df.nu_pdg==12) & (df.ccnc==0) & (df.nproton>0) & (df.npion==0) & (df.npi0==0)
                              & (10 <= df.true_nu_vtx_x) & (df.true_nu_vtx_x <= 246)
-                             & (-106 <= df.true_nu_vtx_y) & (df.true_nu_vtx_y <= 106)
-                             & (10 <= df.true_nu_vtx_z) & (df.true_nu_vtx_z <= 1026)
+                             & (-101 <= df.true_nu_vtx_y) & (df.true_nu_vtx_y <= 101)
+                             & (10 <= df.true_nu_vtx_z) & (df.true_nu_vtx_z <= 986)
                              & (df.elec_e>0.07), True, False) # Set the Michel electron phase space veto here
     
     # Defining the reconstructed neutrino energy in GeV (Pandora)
