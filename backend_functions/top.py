@@ -78,7 +78,8 @@ BDT_LOOSE_CUTS = BDT_PRE_QUERY
 BDT_LOOSE_CUTS += ' and shrmoliereavg < 15'
 
 # loose track constraints (including NuGraph variables)
-BDT_LOOSE_CUTS += ' and trkpid < 0.35'
+# BDT_LOOSE_CUTS += ' and trkpid < 0.35'
+BDT_LOOSE_CUTS += ' and trksemlbl == 1'
 BDT_LOOSE_CUTS += ' and tksh_distance < 12'
 
 ######################### analysis parameters ##############################
@@ -173,8 +174,8 @@ def parameters(ISRUN3):
 ######################### plot categories ##############################
 # everything must pass software trigger ! 
 
-in_fv_query = "10<=true_nu_vtx_x<=246 and -106<=true_nu_vtx_y<=106 and 10<=true_nu_vtx_z<=1026"
-out_fv_query = "((true_nu_vtx_x<10 or true_nu_vtx_x>246) or (true_nu_vtx_y<-106 or true_nu_vtx_y>106) or (true_nu_vtx_z<10 or true_nu_vtx_z>1026))"
+in_fv_query = "10<=true_nu_vtx_x<=246 and -101<=true_nu_vtx_y<=101 and 10<=true_nu_vtx_z<=986"
+out_fv_query = "((true_nu_vtx_x<10 or true_nu_vtx_x>246) or (true_nu_vtx_y<-101 or true_nu_vtx_y>101) or (true_nu_vtx_z<10 or true_nu_vtx_z>986))"
 
 numu_CC_Npi0 = '((nu_pdg==14 or nu_pdg==-14) and ccnc==0 and npi0>=1)'
 numu_CC_0pi0 = '((nu_pdg==14 or nu_pdg==-14) and ccnc==0 and npi0==0)'
@@ -647,8 +648,8 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
 
     df['is_signal'] = np.where((df.nu_pdg==12) & (df.ccnc==0) & (df.nproton>0) & (df.npion==0) & (df.npi0==0)
                              & (10 <= df.true_nu_vtx_x) & (df.true_nu_vtx_x <= 246)
-                             & (-106 <= df.true_nu_vtx_y) & (df.true_nu_vtx_y <= 106)
-                             & (10 <= df.true_nu_vtx_z) & (df.true_nu_vtx_z <= 1026)
+                             & (-101 <= df.true_nu_vtx_y) & (df.true_nu_vtx_y <= 101)
+                             & (10 <= df.true_nu_vtx_z) & (df.true_nu_vtx_z <= 986)
                              & (df.elec_e>0.07), True, False) # Set the Michel electron phase space veto here
     
     df['NeutrinoEnergy2_GeV'] = df['NeutrinoEnergy2']/1000
