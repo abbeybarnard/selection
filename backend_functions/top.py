@@ -110,7 +110,7 @@ def parameters(ISRUN3):
         plots_path = "/Users/abarnard/phd/ccnp/uBNuMI_CC1eNp/plots/fhc/"
         cv_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run1/slimmed/" 
         full_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run1/unslimmed/"
-        run4b_path = "/pnfs/uboone/persistent/users/uboonepro/surprise/run4b_full_samples/wc_processed/NuMI/"
+        run5_path = "/pnfs/uboone/persistent/users/uboonepro/surprise/run5_full_samples/wc_processed/NuMI/"
         
         dirt_tune = 0.65 # validated
         
@@ -126,7 +126,7 @@ def parameters(ISRUN3):
         integrated_flux_per_pot = 1.22343e-11 # [ nu / cm^2 / POT]  , includes 60 MeV neutrino energy threshold
         
         bdt_model = 'BDT_models/bdt_run4c_run4d_run5_FHC_noext_290126.model' 
-        bdt_score_cut = 0.525
+        bdt_score_cut = 0.475
         
         detsys = 0.122
     
@@ -154,7 +154,7 @@ def parameters(ISRUN3):
         
         bdt_model = 'BDT_models/bdt_run4a_run4b_run4c_RHC_noext_290126.model'
 
-        bdt_score_cut = 0.575 
+        bdt_score_cut = 0.500 
         
         detsys = 0.129 #0.133
         
@@ -164,6 +164,7 @@ def parameters(ISRUN3):
         "cv_ntuple_path" : cv_ntuple_path, 
         "full_ntuple_path" : full_ntuple_path, 
         "run4b_path" : run4b_path,
+        "run5_path" : run5_path,
         "dirt_tune" : dirt_tune, 
         "ext_tune" : ext_tune, 
         "beamon_pot" : beamon_pot, 
