@@ -265,7 +265,8 @@ def plot_mc(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overlay', sav
     
     ############################ PLOT ####################################### 
      
-    fig = plt.figure(figsize=(8, 7))
+    # fig = plt.figure(figsize=(8, 7))
+    fig = plt.figure(figsize=(8, 5))
     n, b, p = plt.hist([ext[var], outfv[var], 
                        infv.query(numu_NC_Npi0)[var],
                        infv.query(numu_CC_Npi0)[var],
@@ -399,7 +400,11 @@ def plot_mc(var, nbins, xlow, xhigh, cuts, datasets, isrun3, norm='overlay', sav
     ]
     plt.legend(handles=p[::-1] + [error_handle], labels=label_order_main[::-1] + [err_label], loc='upper right', prop={"size":10}, ncol=2, frameon=False)
 
-    plt.text(0.03, 0.95, "MicroBooNE Run 4b RHC", transform=plt.gca().transAxes, fontsize=14, verticalalignment='top')
+    if isrun3:
+        plt.text(0.03, 0.95, "MicroBooNE Run 4b RHC", transform=plt.gca().transAxes, fontsize=14, verticalalignment='top')
+
+    else:
+        plt.text(0.03, 0.95, "MicroBooNE Run 5 FHC", transform=plt.gca().transAxes, fontsize=14, verticalalignment='top')
     
     if y_label: 
         plt.ylabel(y_label, fontsize=15, labelpad=8)

@@ -117,7 +117,7 @@ def parameters(ISRUN3):
         beamon_pot = 8.9E20 # Normalizing to full dataset FHC
         # beamon_pot = 2.0E20 # v5
 
-        NUE = 'numi_nue_run1'
+        NUE = 'checkout_MCC9.10_Run4c4d5_NuMI_FHC_intrinsic_nue_overlay_surprise_reco2_hist_5'
         
         # OLD INTEGRATED FLUX
         # integrated_flux_per_pot = 1.1864531e-11 # 1.18069E-11 # [ nu / cm^2 / POT]  , includes 60 MeV neutrino energy threshold
@@ -331,16 +331,16 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
     
     else: 
         
-        overlay_pot =  2.33652E21  
-        dirt_pot = 1.67392E21 # david's file
+        overlay_pot = 2.61871e+21 # Run 5 
+        dirt_pot = 4.95156e+20 # Run 5
         beamon_pot = 8.9E20 # Normalizing to full dataset FHC
         # beamon_pot = 2.0E20 #v5
 
         beamon_ntrig = 18422306.0 # Triggers of total FHC data (estimate)
         # beamon_ntrig =  5268051.0 # v5 (EA9CNT_wcut) Run 1 FHC
-        beamoff_ntrig = 9199232.74  # v5 (EXT_NUMIwin_FEMBeamTriggerAlgo)
+        beamoff_ntrig = 17138165.9750 # v5 (EXT_NUMIwin_FEMBeamTriggerAlgo) Run 5
 
-        nue_intrinsic_pot = 2.37838E22
+        nue_intrinsic_pot = 6.01751e+22 # Run 5
         
         df_new = df.copy()
         
