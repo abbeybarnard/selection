@@ -110,12 +110,12 @@ def parameters(ISRUN3):
         plots_path = "/Users/abarnard/phd/ccnp/uBNuMI_CC1eNp/plots/fhc/"
         cv_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run1/slimmed/" 
         full_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run1/unslimmed/"
-        run5_path = "/pnfs/uboone/persistent/users/uboonepro/surprise/run5_full_samples/wc_processed/NuMI/"
+        new_path = "/pnfs/uboone/persistent/users/uboonepro/surprise/run5_full_samples/wc_processed/NuMI/"
         
         dirt_tune = 0.65 # validated
         
-        # beamon_pot = 8.9E20 # Normalizing to full dataset FHC
-        beamon_pot = 2.0E20 # v5
+        beamon_pot = 8.9E20 # Normalizing to full dataset FHC
+        # beamon_pot = 2.0E20 # v5
 
         NUE = 'numi_nue_run1'
         
@@ -125,7 +125,7 @@ def parameters(ISRUN3):
         # NEW VALUE
         integrated_flux_per_pot = 1.22343e-11 # [ nu / cm^2 / POT]  , includes 60 MeV neutrino energy threshold
         
-        bdt_model = 'BDT_models/bdt_run4c_run4d_run5_FHC_noext_290126.model' 
+        bdt_model = 'BDT_models/bdt_run4c_run4d_run5_FHC_noext.model' 
         bdt_score_cut = 0.475
         
         detsys = 0.122
@@ -136,12 +136,12 @@ def parameters(ISRUN3):
         plots_path = "/Users/abarnard/phd/ccnp/uBNuMI_CC1eNp/plots/rhc/"
         cv_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run3b/slimmed/"
         full_ntuple_path = "/Users/abarnard/phd/pelee_ntuples/run3b/unslimmed/"
-        run4b_path = "/pnfs/uboone/persistent/users/uboonepro/surprise/run4b_full_samples/wc_processed/NuMI/"
+        new_path = "/pnfs/uboone/persistent/users/uboonepro/surprise/run4b_full_samples/wc_processed/NuMI/"
         
         dirt_tune = 0.45 # validated
         
-        # beamon_pot = 11.1E20 # Normalizing to full dataset RHC
-        beamon_pot = 5.013E20
+        beamon_pot = 11.1E20 # Normalizing to full dataset RHC
+        # beamon_pot = 5.013E20
         # beamon_pot = 2.527e+20
         
         NUE = 'checkout_MCC9.10_Run4b_NuMI_RHC_nue_overlay_surprise_v10_04_07_09_reco2_hist'
@@ -152,7 +152,7 @@ def parameters(ISRUN3):
         # New integrated flux!
         integrated_flux_per_pot =  9.02463e-12 #3.2774914e-12 # [ nu / cm^2 / POT]  , includes 60 MeV neutrino energy threshold
         
-        bdt_model = 'BDT_models/bdt_run4a_run4b_run4c_RHC_noext_290126.model'
+        bdt_model = 'BDT_models/bdt_run4a_run4b_run4c_RHC_noext.model'
 
         bdt_score_cut = 0.500 
         
@@ -163,8 +163,7 @@ def parameters(ISRUN3):
         "plots_path" : plots_path, 
         "cv_ntuple_path" : cv_ntuple_path, 
         "full_ntuple_path" : full_ntuple_path, 
-        "run4b_path" : run4b_path,
-        "run5_path" : run5_path,
+        "new_path" : new_path,
         "dirt_tune" : dirt_tune, 
         "ext_tune" : ext_tune, 
         "beamon_pot" : beamon_pot, 
@@ -283,10 +282,12 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
 
         overlay_pot = 2.33807e+21  # Run 4b
         dirt_pot = 4.20894e+20 # Run 4b
-        beamon_pot = 5.013E20
+        beamon_pot = 11.1E20 # Total RHC POT
+        # beamon_pot = 5.013E20
         nue_intrinsic_pot = 5.04447e+22 # Run 4b
 
-        beamon_ntrig =  10349610.0 # Triggers of Run 3 data (from Patrick) (think this is an average)
+        beamon_ntrig = 22976134.0 # Triggers of total RHC data (estimate)
+        # beamon_ntrig =  10349610.0 # Triggers of Run 3 data (from Patrick) (think this is an average)
         beamoff_ntrig = 15770854.05  # Triggers of Run 4b beam off 
 
         df_new = df.copy()
@@ -332,9 +333,11 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
         
         overlay_pot =  2.33652E21  
         dirt_pot = 1.67392E21 # david's file
-        beamon_pot = 2.0E20 #v5
+        beamon_pot = 8.9E20 # Normalizing to full dataset FHC
+        # beamon_pot = 2.0E20 #v5
 
-        beamon_ntrig =  5268051.0 # v5 (EA9CNT_wcut)
+        beamon_ntrig = 18422306.0 # Triggers of total FHC data (estimate)
+        # beamon_ntrig =  5268051.0 # v5 (EA9CNT_wcut) Run 1 FHC
         beamoff_ntrig = 9199232.74  # v5 (EXT_NUMIwin_FEMBeamTriggerAlgo)
 
         nue_intrinsic_pot = 2.37838E22
@@ -647,7 +650,7 @@ def generated_signal(ISRUN3, var, bins, xlow, xhigh, cuts=None, weight='totweigh
 
     
     # This needs to be full_ntuple_path!
-    f = uproot.open(parameters(ISRUN3)['run4b_path']+parameters(ISRUN3)['NUE']+".root")[fold][tree]
+    f = uproot.open(parameters(ISRUN3)['new_path']+parameters(ISRUN3)['NUE']+".root")[fold][tree]
     df = pd.DataFrame(f.arrays(variables, library="np"))
 
     # Added in the ppfx_cv cleaning here 
