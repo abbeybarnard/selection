@@ -280,7 +280,7 @@ def pot_scale(df, df_type, ISRUN3, tune=True):
     
     if ISRUN3: 
 
-        overlay_pot = 2.33807e+21  # Run 4b
+        overlay_pot = 2.33741e+21  # Run 4b
         dirt_pot = 4.20894e+20 # Run 4b
         beamon_pot = 11.1E20 # Total RHC POT
         # beamon_pot = 5.013E20
